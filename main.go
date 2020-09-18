@@ -16,18 +16,98 @@ var user = "admin"
 var password = "admin"
 var database = "employees"
 
-// type CheckInRecord struct {
-// 	name        string
-// 	checkInTime string
-// 	pic         string
-// 	leaveType   string
-// 	date        string
-// 	department  string
-// 	position    string
-// }
-
 func main() {
 
+	//新增一年的假資料:美日打卡紀錄
+	//CreateCheckInRecord360Days()
+
+	//新增一年份的假資料:統計
+	CreateCheckInStatistics360Ddays()
+
+}
+
+// CreateCheckInStatistics360Ddays return nil
+func CreateCheckInStatistics360Ddays() {
+	connString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d;database=%s;",
+		server, user, password, port, database)
+	conn, err := sql.Open("mssql", connString)
+	if err != nil {
+		log.Fatal("Open connection failed:", err.Error())
+	}
+	fmt.Printf("Connected!\n")
+	defer conn.Close()
+
+	// 設定新的時間物件
+	d := time.Date(2020, time.Month(1), 1, 9, 9, 0, 0, time.Local)
+	fmt.Println(d.String())
+
+	for i := 0; i <= 183; i++ {
+		// Create employee
+		// C1
+		createID, err := CreateCheckInStatistics(
+			conn,
+			strconv.Itoa(d.Year())+"-"+strconv.Itoa(int(d.Month()))+"-"+strconv.Itoa(d.Day()),
+			"30",
+			"27",
+			"3",
+			"4")
+		if err != nil {
+			log.Fatal("CreateCheckInStatistics360Ddays failed:", err.Error())
+		}
+
+		fmt.Printf("成功建立= %d.\n", createID)
+		fmt.Println(d.String())
+		d = d.AddDate(0, 0, 1)
+
+		createID, err = CreateCheckInStatistics(
+			conn,
+			strconv.Itoa(d.Year())+"-"+strconv.Itoa(int(d.Month()))+"-"+strconv.Itoa(d.Day()),
+			"30",
+			"28",
+			"2",
+			"5")
+		if err != nil {
+			log.Fatal("CreateCheckInStatistics360Ddays failed:", err.Error())
+		}
+
+		fmt.Printf("成功建立= %d.\n", createID)
+		fmt.Println(d.String())
+		d = d.AddDate(0, 0, 1)
+
+	}
+}
+
+// CreateCheckInStatistics return nil
+func CreateCheckInStatistics(
+	db *sql.DB,
+	date string,
+	expected string,
+	attendance string,
+	notArrived string,
+	guests string) (int64, error) {
+
+	var newPic []string
+	fmt.Println(newPic)
+
+	_, err := db.Exec(
+		"INSERT INTO check_in_statistics(date,expected,attendance,not_arrived,guests) VALUES (?,?,?,?,?)",
+		NewNullString(date),
+		NewNullString(expected),
+		NewNullString(attendance),
+		NewNullString(notArrived),
+		NewNullString(guests),
+	)
+
+	if err != nil {
+		fmt.Println("Error inserting new row: " + err.Error())
+		return -1, err
+	}
+
+	return 1, err
+}
+
+// CreateCheckInRecord360Days return nil
+func CreateCheckInRecord360Days() {
 	// Connect to database
 	connString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d;database=%s;",
 		server, user, password, port, database)
@@ -55,7 +135,7 @@ func main() {
 			"軟體",
 			"軟體工程師")
 		if err != nil {
-			log.Fatal("CreateEmployee failed:", err.Error())
+			log.Fatal("CreateCheckInRecord360Days failed:", err.Error())
 		}
 
 		//C2
@@ -68,7 +148,7 @@ func main() {
 			"軟體",
 			"軟體工程師")
 		if err != nil {
-			log.Fatal("CreateEmployee failed:", err.Error())
+			log.Fatal("CreateCheckInRecord360Days failed:", err.Error())
 		}
 
 		//C3
@@ -81,7 +161,7 @@ func main() {
 			"視覺設計",
 			"視覺設計師")
 		if err != nil {
-			log.Fatal("CreateEmployee failed:", err.Error())
+			log.Fatal("CreateCheckInRecord360Days failed:", err.Error())
 		}
 
 		//C4
@@ -94,7 +174,7 @@ func main() {
 			"視覺設計",
 			"視覺設計師")
 		if err != nil {
-			log.Fatal("CreateEmployee failed:", err.Error())
+			log.Fatal("CreateCheckInRecord360Days failed:", err.Error())
 		}
 
 		//C5
@@ -107,7 +187,7 @@ func main() {
 			"視覺設計",
 			"視覺設計師")
 		if err != nil {
-			log.Fatal("CreateEmployee failed:", err.Error())
+			log.Fatal("CreateCheckInRecord360Days failed:", err.Error())
 		}
 
 		//C6
@@ -120,7 +200,7 @@ func main() {
 			"軟體",
 			"軟體工程師")
 		if err != nil {
-			log.Fatal("CreateEmployee failed:", err.Error())
+			log.Fatal("CreateCheckInRecord360Days failed:", err.Error())
 		}
 
 		//C7
@@ -133,7 +213,7 @@ func main() {
 			"軟體",
 			"軟體工程師")
 		if err != nil {
-			log.Fatal("CreateEmployee failed:", err.Error())
+			log.Fatal("CreateCheckInRecord360Days failed:", err.Error())
 		}
 
 		fmt.Printf("成功建立= %d.\n", createID)
@@ -141,46 +221,10 @@ func main() {
 		d = d.AddDate(0, 0, 1)
 
 	}
-	// connString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d;database=%s;",
-	// 	server, user, password, port, database)
-
-	// db, err := gorm.Open("mssql", connString)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-
-	// // 防止 gorm 產生 SQL 時，自動在 table 加上 s
-	// // https://gorm.io/docs/conventions.html#Pluralized-Table-Name
-	// db.SingularTable(true)
-
-	// var id int
-	// var name string
-
-	// db.Debug().Table("check_in_record").Select("Id, Name").Row().Scan(&id, &name)
-
-	// fmt.Println(id, name)
-
-	// // Create employee
-	// createID, err := Create_CheckInRecord(conn, "Jake", "United States")
-	// if err != nil {
-	// 	log.Fatal("CreateEmployee failed:", err.Error())
-	// }
-	// fmt.Printf("Inserted ID: %d successfully.\n", createID)
 }
 
 // CreateCheckInRecord return (int64, error)
 func CreateCheckInRecord(db *sql.DB, name string, checkInTime string, pic string, leaveType string, date string, department string, position string) (int64, error) {
-
-	// tsql := fmt.Sprintf("INSERT INTO check_in_record(name,check_in_time,pic,leave_type,date,department,position) VALUES ('%s','%s','%s','%s','%s','%s','%s');",
-	// 	name,
-	// 	checkInTime,
-	// 	//pic,
-	// 	nil,
-	// 	leaveType,
-	// 	date,
-	// 	department,
-	// 	position)
-	// _, err := db.Exec(tsql)
 
 	var newPic []string
 	fmt.Println(newPic)
@@ -193,6 +237,18 @@ func CreateCheckInRecord(db *sql.DB, name string, checkInTime string, pic string
 	}
 
 	return 1, err
+
+	// tsql := fmt.Sprintf("INSERT INTO check_in_record(name,check_in_time,pic,leave_type,date,department,position) VALUES ('%s','%s','%s','%s','%s','%s','%s');",
+	// 	name,
+	// 	checkInTime,
+	// 	//pic,
+	// 	nil,
+	// 	leaveType,
+	// 	date,
+	// 	department,
+	// 	position)
+	// _, err := db.Exec(tsql)
+
 }
 
 // NewNullString returns sql.NullString
@@ -206,44 +262,3 @@ func NewNullString(s string) sql.NullString {
 		Valid:  true,
 	}
 }
-
-/*****下面為測試的code****/
-// package main
-
-// import (
-// 	"fmt"
-// 	"strings"
-// )
-
-// func WordCount(s string) map[string]int{
-
-// 	var a[] string = strings.Fields(s)
-// 	var m map[string]int
-// 	m = make(map[string]int)
-
-// 	fmt.Println(a)
-// 	for i := 0; i<len(a);i++ {
-// 		//fmt.Println(a[i])
-// 		word := a[i]
-// 		m[word] = len(a[i])
-// 		fmt.Println(m)
-// 	}
-// 	return m
-// }
-
-// func main() {
-
-// 	s := "foo   bar    baz"
-// 	fmt.Println(s)
-
-// 	var a[] string = strings.Fields(s)
-// 	fmt.Println(cap(a),len(a))
-
-// 	var m map[string]int
-// 	m = WordCount("a b c dddddd ")
-
-// 	fmt.Println(m)
-// 	//fmt.Println(WordCount("a b c d "))
-// 	// fmt.Printf("%q",strings.Fields(" foo   bar    baz"))
-
-// }
