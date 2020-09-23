@@ -28,9 +28,10 @@ var (
 	method   int
 )
 
-// CheckInStatistics struct
-type CheckInStatistics struct {
+// Item struct
+type Item struct {
 	Value string
+	i2    string
 }
 
 func main() {
@@ -67,7 +68,7 @@ func upsert(ctx context.Context, c *mongo.Collection, amount int) {
 
 	for i := 0; i <= amount; i++ {
 		query := bson.M{"id": i}
-		update := bson.M{"$set": Item{Value: "New Item " + strconv.Itoa(i)}}
+		update := bson.M{"$set": Item{Value: "New Item " + strconv.Itoa(i), i2: "test"}}
 
 		opts := options.Update().SetUpsert(true)
 		_, err := c.UpdateOne(ctx, query, update, opts)
@@ -78,9 +79,9 @@ func upsert(ctx context.Context, c *mongo.Collection, amount int) {
 	}
 
 	// 刪除資料庫
-	// if err := c.Drop(ctx); err != nil {
-	// 	log.Fatalln(err.Error())
-	// }
+	if err := c.Drop(ctx); err != nil {
+		log.Fatalln(err.Error())
+	}
 }
 
 func bulkUpsert(ctx context.Context, c *mongo.Collection, amount int) {
