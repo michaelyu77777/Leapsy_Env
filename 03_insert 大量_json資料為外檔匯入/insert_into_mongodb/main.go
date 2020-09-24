@@ -60,16 +60,21 @@ func main() {
 	"guests": 4 }`
 
 	// 要比對符合此形狀(`"date": "\d{4}-\d{2}-\d{2}"`)的string 來進行部份string替換
-	regularExpression := regexp.MustCompile(`"date": "\d{4}-\d{2}-\d{2}"`)
+	regularExpressionForDate := regexp.MustCompile(`"date": "\d{4}-\d{2}-\d{2}"`)
+	regularExpressionForID := regexp.MustCompile(`"id": \d{1}`)
+
+	id := 1
 
 	// 差入一整年的統計假資料
 	for myTime := time.Date(2020, 1, 1, 0, 0, 0, 0, time.Local); myTime != time.Date(2021, 1, 1, 0, 0, 0, 0, time.Local); myTime = myTime.AddDate(0, 0, 1) {
 
 		// 指定新變數(新日期) 透過Sprintf來回傳想要的格式 (0代表若沒有值則用0替代,4d表示有四位數) 以年月日來取代
-		newString := fmt.Sprintf(`"date": "%04d-%02d-%02d"`, myTime.Year(), myTime.Month(), myTime.Day())
+		newStringDate := fmt.Sprintf(`"date": "%04d-%02d-%02d"`, myTime.Year(), myTime.Month(), myTime.Day())
+		newStringID := fmt.Sprintf(`"id": %1d`, id)
 
 		// 傳入整個jsonString，進行jsonString內容的比對，若符合 regularExpressione格式的部份，則將其部份替換成 newString，最後回傳整個新的JSON字串
-		newJSONString := regularExpression.ReplaceAllString(jsonString, newString)
+		newJSONString := regularExpressionForDate.ReplaceAllString(jsonString, newStringDate) // 換掉日期
+		newJSONString = regularExpressionForID.ReplaceAllString(newJSONString, newStringID)   // 換掉id
 
 		// 將新的JSONString 轉換interface{}格式放入 bdoc中
 		err = bson.UnmarshalJSON([]byte(newJSONString), &bdoc)
@@ -82,6 +87,8 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+
+		id++
 	}
 
 	// 插入一年的統計假資料
