@@ -2,24 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"time"
 
-	// Built-in Golang packages
-	// manage multiple requests
-	// Println() function
-	// io.ReadFile
-	"log"
-	// get an object type
-	// Import the JSON
-
-	// encoding package
-
-	// Official 'mongo-go-driver' packages
 	"github.com/globalsign/mgo"
-
-	//"go.mongodb.org/mongo-driver/bson"
-	// "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
