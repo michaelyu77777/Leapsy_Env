@@ -1,0 +1,14 @@
+{
+    "remote.extensionKind": {
+
+    
+        "pub.name": [
+            "ui"
+        ]
+        
+    },
+    "go.toolsEnvVars": {
+        "GOFLAGS": "-mod=vendor"
+},
+"go.docsTool": "guru"
+}
