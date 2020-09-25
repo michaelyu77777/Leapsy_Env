@@ -1,25 +1,199 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"os"
 	"regexp"
 	"time"
 
 	"github.com/globalsign/mgo"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"gopkg.in/mgo.v2/bson"
 )
 
-type MongoFields struct {
+type CheckInRecord struct {
 	//Key string `json:"key,omitempty"`
-	ID        int    `json:"_id"`
-	Fiel_dStr string `json:"Field_Str,omitempty"` //json欄位要長這樣 若field非
-	FieldInt  int    `json:"Field_Int,omitempty"`
-	FieldBool bool   `json:"Field_Bool,omitempty"`
+	id   int    `json:"_id"`
+	Name string //注意:struct名稱開頭必須要大寫...否則無法寫入mongoDB!!!不知道為什麼...
+	//Check_in_time time.Time
+	Check_in_time string
+	Pic           string
+	Leave_type    string
+	Date          string
+	Department    string
+	Position      string
 }
 
 func main() {
+	//插入一年假資料A
+	//insertCheckInStatisticsOneYear()
 
+	//插入一年假資料B
+	insertCheckInRecordOneYear()
+
+	//fmt.Println(ReadFile("1.txt"))
+}
+
+// ReadFile 讀檔 return byte[]
+func ReadFile(fileName string) string {
+	f, err := ioutil.ReadFile("base64/" + fileName)
+	//fmt.Println("測試ReadFile ERROR:", err)
+
+	if err != nil {
+		fmt.Println("read fail", err)
+	}
+	return string(f)
+}
+
+// 插入一整年假資料B:寫法二
+func insertCheckInRecordOneYear() {
+	// Declare host and port options to pass to the Connect() method
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	// fmt.Println("clientOptions TYPE:", reflect.TypeOf(clientOptions), "\n")
+
+	// Connect to the MongoDB and return Client instance
+	client, err := mongo.Connect(context.TODO(), clientOptions)
+	if err != nil {
+		fmt.Println("mongo.Connect() ERROR:", err)
+		os.Exit(1)
+	}
+
+	// Declare Context type object for managing multiple API requests
+	ctx, _ := context.WithTimeout(context.Background(), 15*time.Second)
+
+	// Access a MongoDB collection through a database
+	col := client.Database("leapsy_env").Collection("check_in_record")
+	//fmt.Println("Collection type:", reflect.TypeOf(col), "\n")
+
+	// 插入一整年的統計假資料
+	for myTime := time.Date(2020, 1, 1, 9, 0, 0, 0, time.Local); myTime != time.Date(2021, 1, 1, 9, 0, 0, 0, time.Local); myTime = myTime.AddDate(0, 0, 1) {
+
+		myCheckInTime := fmt.Sprintf(`%02d:%02d:%02d`, myTime.Hour(), myTime.Minute(), myTime.Second())
+		myDate := fmt.Sprintf(`%04d-%02d-%02d`, myTime.Year(), myTime.Month(), myTime.Day())
+
+		// 實體化struct
+		//Person1
+		fileName := "1.txt"
+		picBase64Content := ReadFile(fileName)
+		DocPerson := CheckInRecord{
+			Name:          "micha",
+			Check_in_time: myCheckInTime,
+			Pic:           picBase64Content,
+			Leave_type:    "",
+			Date:          myDate,
+			Department:    "軟體",
+			Position:      "軟體工程師",
+		}
+		//fmt.Println("oneDoc TYPE:", reflect.TypeOf(oneDoc), "\n")
+		// 插入一筆資料到資料庫 InsertOne() method 回傳 Returns mongo.InsertOneResult
+		result, insertErr := col.InsertOne(ctx, DocPerson)
+
+		//Person2
+		fileName = "2.txt"
+		picBase64Content = ReadFile(fileName)
+		DocPerson = CheckInRecord{
+			Name:          "ken",
+			Check_in_time: myCheckInTime,
+			Pic:           picBase64Content,
+			Leave_type:    "",
+			Date:          myDate,
+			Department:    "軟體",
+			Position:      "軟體工程師",
+		}
+		result, insertErr = col.InsertOne(ctx, DocPerson)
+
+		//Person3
+		fileName = "3.txt"
+		picBase64Content = ReadFile(fileName)
+		DocPerson = CheckInRecord{
+			Name:          "p3",
+			Check_in_time: myCheckInTime,
+			Pic:           picBase64Content,
+			Leave_type:    "",
+			Date:          myDate,
+			Department:    "視覺設計",
+			Position:      "視覺設計師",
+		}
+		result, insertErr = col.InsertOne(ctx, DocPerson)
+
+		//Person4
+		fileName = "4.txt"
+		picBase64Content = ReadFile(fileName)
+		DocPerson = CheckInRecord{
+			Name:          "p4",
+			Check_in_time: myCheckInTime,
+			Pic:           picBase64Content,
+			Leave_type:    "",
+			Date:          myDate,
+			Department:    "視覺設計",
+			Position:      "視覺設計師",
+		}
+		result, insertErr = col.InsertOne(ctx, DocPerson)
+
+		//Person5
+		fileName = "5.txt"
+		picBase64Content = ReadFile(fileName)
+		DocPerson = CheckInRecord{
+			Name:          "p5",
+			Check_in_time: myCheckInTime,
+			Pic:           picBase64Content,
+			Leave_type:    "",
+			Date:          myDate,
+			Department:    "視覺設計",
+			Position:      "視覺設計師",
+		}
+		result, insertErr = col.InsertOne(ctx, DocPerson)
+
+		//Person6
+		fileName = "6.txt"
+		picBase64Content = ReadFile(fileName)
+		DocPerson = CheckInRecord{
+			Name:          "p6",
+			Check_in_time: myCheckInTime,
+			Pic:           picBase64Content,
+			Leave_type:    "病",
+			Date:          myDate,
+			Department:    "軟體",
+			Position:      "軟體工程師",
+		}
+		result, insertErr = col.InsertOne(ctx, DocPerson)
+
+		//Person7
+		fileName = "7.txt"
+		picBase64Content = ReadFile(fileName)
+		DocPerson = CheckInRecord{
+			Name:          "p7",
+			Check_in_time: myCheckInTime,
+			Pic:           picBase64Content,
+			Leave_type:    "事",
+			Date:          myDate,
+			Department:    "軟體",
+			Position:      "軟體工程師",
+		}
+		result, insertErr = col.InsertOne(ctx, DocPerson)
+
+		if insertErr != nil {
+			fmt.Println("InsertOne ERROR:", insertErr)
+			os.Exit(1) // safely exit script on error
+		} else {
+			// fmt.Println("InsertOne() result type: ", reflect.TypeOf(result))
+			//fmt.Println("InsertOne() API result:", result)
+
+			// get the inserted ID string
+			newID := result.InsertedID
+			fmt.Println("InsertOne() newID:", newID)
+			//fmt.Println("InsertOne() newID type:", reflect.TypeOf(newID))
+		}
+	}
+
+}
+
+/** 插入一整年假資料A:寫法一 */
+func insertCheckInStatisticsOneYear() {
 	/** 連資料庫 MongoDB
 	 * 寫法:透過 mgo.Dial 撥號，return seesion **/
 
@@ -77,24 +251,4 @@ func main() {
 
 		id++
 	}
-
-	// 插入一年的統計假資料
-	// for i := 0; i <= 360; i++ {
-
-	// 	// 統計數據一
-	// 	err = bson.UnmarshalJSON([]byte(`{	"id": 1,
-	// 										"date": "2020-01-01",
-	// 										"expected": 30,
-	// 										"attendance": 27,
-	// 										"not_arrived": 3,
-	// 										"guests": 4 }`), &bdoc)
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-
-	// 	err = collection.Insert(&bdoc)
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// }
 }
