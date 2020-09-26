@@ -1,5 +1,7 @@
 package main
 
+//package model
+
 import (
 	"context"
 	"log"
@@ -9,9 +11,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-//GetMongoDbConnection get connection of mongodb
+//GetMongoDbConnection 取得 mongodb連線
 func GetMongoDbConnection() (*mongo.Client, error) {
 
+	//連線mongodb
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://localhost:27017"))
 
 	if err != nil {
@@ -26,6 +29,7 @@ func GetMongoDbConnection() (*mongo.Client, error) {
 	return client, nil
 }
 
+// 取得 Collection
 func getMongoDbCollection(DbName string, CollectionName string) (*mongo.Collection, error) {
 	client, err := GetMongoDbConnection()
 
