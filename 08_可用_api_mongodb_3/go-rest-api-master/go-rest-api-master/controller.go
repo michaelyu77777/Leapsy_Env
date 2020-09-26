@@ -10,23 +10,33 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-const dbName = "leapsy_env"              //DB
-const collectionName = "check_in_record" //Collection
-const port = 8000                        //API port
+const dbName = "leapsy_env"                                     //DB
+const collectionNameOfCheckInRecord = "check_in_record"         //Collection
+const collectionNameOfCheckInStatistics = "check_in_statistics" //Collection
+const collectionName = "persion"                                //Collection
+const port = 8000                                               //API port
 
 // 建立GET POST 路徑
 func newPersonController() {
 	app := fiber.New()
 
+	/*建立 checkInRecord 路徑*/
+	app.Get("/checkInRecord/query/:date?", getCheckInRecord)
+	//app.Post("/person", createPerson)
+	//app.Put("/person/:id", updatePerson)
+	//app.Delete("/person/:id", deletePerson)
+
+	/*建立 checkInStatistics 路徑*/
+	app.Get("/checkInStatistics/query/:date?", getCheckInStatistics)
+	//app.Post("/person", createPerson)
+	//app.Put("/person/:id", updatePerson)
+	//app.Delete("/person/:id", deletePerson)
+
+	/*建立範例 person 路徑*/
 	// app.Get("/person/:id?", getPerson)
 	// app.Post("/person", createPerson)
 	// app.Put("/person/:id", updatePerson)
 	// app.Delete("/person/:id", deletePerson)
-
-	app.Get("/checkInRecord/query/:date?", getCheckInRecord)
-	app.Post("/person", createPerson)
-	app.Put("/person/:id", updatePerson)
-	app.Delete("/person/:id", deletePerson)
 
 	app.Listen(port)
 }
@@ -35,7 +45,56 @@ func newPersonController() {
 func getCheckInRecord(c *fiber.Ctx) {
 
 	// 取得 collection
-	collection, err := getMongoDbCollection(dbName, collectionName)
+	collection, err := getMongoDbCollection(dbName, collectionNameOfCheckInRecord)
+
+	// 若連線有誤
+	if err != nil {
+		c.Status(500).Send(err)
+		return
+	}
+
+	var filter bson.M = bson.M{}
+
+	// 若有給date
+	if c.Params("date") != "" {
+
+		/*按照date取出當筆資料*/
+
+		//取出date參數
+		myDate := c.Params("date")
+		fmt.Println("查詢日期=", myDate)
+
+		filter = bson.M{"date": myDate}
+		fmt.Println("filter=", filter) //filter 型態 Map[date:2020-01-01]
+
+	}
+
+	var results []bson.M
+	cur, err := collection.Find(context.Background(), filter)
+	defer cur.Close(context.Background())
+
+	if err != nil {
+		c.Status(500).Send(err)
+		return
+	}
+
+	cur.All(context.Background(), &results)
+
+	// 若查無資料
+	if results == nil {
+		c.SendStatus(404)
+		return
+	}
+
+	json, _ := json.Marshal(results)
+	c.Send(json)
+}
+
+/* 以下為 CheckInStatistics 相關 functions */
+func getCheckInStatistics(c *fiber.Ctx) {
+
+	// 取得 collection
+	collection, err := getMongoDbCollection(dbName, collectionNameOfCheckInStatistics)
 
 	// 若連線有誤
 	if err != nil {
