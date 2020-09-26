@@ -14,10 +14,13 @@ const dbName = "leapsy_env"                                     //DB
 const collectionNameOfCheckInRecord = "check_in_record"         //Collection
 const collectionNameOfCheckInStatistics = "check_in_statistics" //Collection
 const collectionName = "persion"                                //Collection
-const port = 8000                                               //API port
+//const port = 8081                                               //API port
+const port = 8000 //API port
 
 // 建立GET POST 路徑
 func newPersonController() {
+
+	fmt.Println("測試")
 	app := fiber.New()
 
 	/*建立 checkInRecord 路徑*/

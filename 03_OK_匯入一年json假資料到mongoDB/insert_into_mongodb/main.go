@@ -17,7 +17,7 @@ import (
 
 type CheckInRecord struct {
 	//Key string `json:"key,omitempty"`
-	id   int    `json:"_id"`
+	Id   int    //`json:"id"`
 	Name string //注意:struct名稱開頭必須要大寫...否則無法寫入mongoDB!!!不知道為什麼...
 	//Check_in_time time.Time
 	Check_in_time string
@@ -69,6 +69,8 @@ func insertCheckInRecordOneYear() {
 	col := client.Database("leapsy_env").Collection("check_in_record")
 	//fmt.Println("Collection type:", reflect.TypeOf(col), "\n")
 
+	index := 0 //id序號
+
 	// 插入一整年的統計假資料
 	for myTime := time.Date(2020, 1, 1, 9, 0, 0, 0, time.Local); myTime != time.Date(2021, 1, 1, 9, 0, 0, 0, time.Local); myTime = myTime.AddDate(0, 0, 1) {
 
@@ -79,7 +81,9 @@ func insertCheckInRecordOneYear() {
 		//Person1
 		fileName := "1.txt"
 		picBase64Content := ReadFile(fileName)
+		index++
 		DocPerson := CheckInRecord{
+			Id:            index,
 			Name:          "micha",
 			Check_in_time: myCheckInTime,
 			Pic:           picBase64Content,
@@ -95,7 +99,9 @@ func insertCheckInRecordOneYear() {
 		//Person2
 		fileName = "2.txt"
 		picBase64Content = ReadFile(fileName)
+		index++
 		DocPerson = CheckInRecord{
+			Id:            index,
 			Name:          "ken",
 			Check_in_time: myCheckInTime,
 			Pic:           picBase64Content,
@@ -109,7 +115,9 @@ func insertCheckInRecordOneYear() {
 		//Person3
 		fileName = "3.txt"
 		picBase64Content = ReadFile(fileName)
+		index++
 		DocPerson = CheckInRecord{
+			Id:            index,
 			Name:          "p3",
 			Check_in_time: myCheckInTime,
 			Pic:           picBase64Content,
@@ -123,7 +131,9 @@ func insertCheckInRecordOneYear() {
 		//Person4
 		fileName = "4.txt"
 		picBase64Content = ReadFile(fileName)
+		index++
 		DocPerson = CheckInRecord{
+			Id:            index,
 			Name:          "p4",
 			Check_in_time: myCheckInTime,
 			Pic:           picBase64Content,
@@ -137,7 +147,9 @@ func insertCheckInRecordOneYear() {
 		//Person5
 		fileName = "5.txt"
 		picBase64Content = ReadFile(fileName)
+		index++
 		DocPerson = CheckInRecord{
+			Id:            index,
 			Name:          "p5",
 			Check_in_time: myCheckInTime,
 			Pic:           picBase64Content,
@@ -151,7 +163,9 @@ func insertCheckInRecordOneYear() {
 		//Person6
 		fileName = "6.txt"
 		picBase64Content = ReadFile(fileName)
+		index++
 		DocPerson = CheckInRecord{
+			Id:            index,
 			Name:          "p6",
 			Check_in_time: myCheckInTime,
 			Pic:           picBase64Content,
@@ -165,7 +179,9 @@ func insertCheckInRecordOneYear() {
 		//Person7
 		fileName = "7.txt"
 		picBase64Content = ReadFile(fileName)
+		index++
 		DocPerson = CheckInRecord{
+			Id:            index,
 			Name:          "p7",
 			Check_in_time: myCheckInTime,
 			Pic:           picBase64Content,
