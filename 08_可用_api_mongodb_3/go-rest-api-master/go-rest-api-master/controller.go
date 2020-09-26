@@ -21,13 +21,15 @@ func newPersonController() {
 	app := fiber.New()
 
 	/*建立 checkInRecord 路徑*/
-	app.Get("/checkInRecord/query/:date?", getCheckInRecord)
+	app.Get("/checkInRecord/query/:date?", getCheckInRecord)                      //應到人員資料
+	app.Get("/checkInRecord/attendance/:date?", getAttendanceOfCheckInStatistics) //實到人員資料
+	app.Get("/checkInRecord/notArrived/:date?", getNotArrivedOfCheckInStatistics) //未到人員資料
 	//app.Post("/person", createPerson)
 	//app.Put("/person/:id", updatePerson)
 	//app.Delete("/person/:id", deletePerson)
 
 	/*建立 checkInStatistics 路徑*/
-	app.Get("/checkInStatistics/query/:date?", getCheckInStatistics)
+	app.Get("/checkInStatistics/query/:date?", getCheckInStatistics) //統計資料
 	//app.Post("/person", createPerson)
 	//app.Put("/person/:id", updatePerson)
 	//app.Delete("/person/:id", deletePerson)
@@ -42,6 +44,7 @@ func newPersonController() {
 }
 
 /* 以下為 CheckInRecord 相關 functions */
+// 取得指定日期<應到>人員資料
 func getCheckInRecord(c *fiber.Ctx) {
 
 	// 取得 collection
@@ -90,7 +93,108 @@ func getCheckInRecord(c *fiber.Ctx) {
 	c.Send(json)
 }
 
+// 取得指定日期<實到>人員資料
+func getAttendanceOfCheckInStatistics(c *fiber.Ctx) {
+
+	// 取得 collection
+	collection, err := getMongoDbCollection(dbName, collectionNameOfCheckInRecord)
+
+	// 若連線有誤
+	if err != nil {
+		c.Status(500).Send(err)
+		return
+	}
+
+	var filter bson.M = bson.M{}
+
+	// 若有給date
+	if c.Params("date") != "" {
+
+		/*按照date取出當筆資料*/
+
+		//取出date參數
+		myDate := c.Params("date")
+		fmt.Println("查詢日期=", myDate)
+
+		//bson.M{} 裡面所用的欄位名稱 必須使用mongoDb欄位名稱 而非struct的欄位名稱 (與JAVA相異)
+		filter = bson.M{"date": myDate, "leave_type": ""} //應到:leave_type is NULL
+		fmt.Println("filter=", filter)                    //filter 型態 Map[date:2020-01-01]
+
+	}
+
+	var results []bson.M
+	cur, err := collection.Find(context.Background(), filter)
+	defer cur.Close(context.Background())
+
+	if err != nil {
+		c.Status(500).Send(err)
+		return
+	}
+
+	cur.All(context.Background(), &results)
+
+	// 若查無資料
+	if results == nil {
+		c.SendStatus(404)
+		return
+	}
+
+	json, _ := json.Marshal(results)
+	c.Send(json)
+}
+
+// 取得指定日期<未到>人員資料
+func getNotArrivedOfCheckInStatistics(c *fiber.Ctx) {
+
+	// 取得 collection
+	collection, err := getMongoDbCollection(dbName, collectionNameOfCheckInRecord)
+
+	// 若連線有誤
+	if err != nil {
+		c.Status(500).Send(err)
+		return
+	}
+
+	var filter bson.M = bson.M{}
+
+	// 若有給date
+	if c.Params("date") != "" {
+
+		/*按照date取出當筆資料*/
+
+		//取出date參數
+		myDate := c.Params("date")
+		fmt.Println("查詢日期=", myDate)
+
+		//bson.M{} 裡面所用的欄位名稱 必須使用mongoDb欄位名稱 而非struct的欄位名稱 (與JAVA相異)
+		filter = bson.M{"date": myDate, "leave_type": bson.M{"$ne": ""}} //應到:leave_type is NOT Equal NULL
+		fmt.Println("filter=", filter)
+
+	}
+
+	var results []bson.M
+	cur, err := collection.Find(context.Background(), filter)
+	defer cur.Close(context.Background())
+
+	if err != nil {
+		c.Status(500).Send(err)
+		return
+	}
+
+	cur.All(context.Background(), &results)
+
+	// 若查無資料
+	if results == nil {
+		c.SendStatus(404)
+		return
+	}
+
+	json, _ := json.Marshal(results)
+	c.Send(json)
+}
+
 /* 以下為 CheckInStatistics 相關 functions */
+// 取得指定日期統計資料
 func getCheckInStatistics(c *fiber.Ctx) {
 
 	// 取得 collection
@@ -139,7 +243,7 @@ func getCheckInStatistics(c *fiber.Ctx) {
 	c.Send(json)
 }
 
-/* 以下為 Person 相關 functions */
+/* 以下為範例 Person 相關 functions */
 func getPerson(c *fiber.Ctx) {
 	collection, err := getMongoDbCollection(dbName, collectionName)
 	if err != nil {
