@@ -167,7 +167,7 @@ func insertCheckInRecordOneYear() {
 		DocPerson = CheckInRecord{
 			Id:            index,
 			Name:          "p6",
-			Check_in_time: myCheckInTime,
+			Check_in_time: "",
 			Pic:           picBase64Content,
 			Leave_type:    "病",
 			Date:          myDate,
@@ -183,7 +183,7 @@ func insertCheckInRecordOneYear() {
 		DocPerson = CheckInRecord{
 			Id:            index,
 			Name:          "p7",
-			Check_in_time: myCheckInTime,
+			Check_in_time: "",
 			Pic:           picBase64Content,
 			Leave_type:    "事",
 			Date:          myDate,
