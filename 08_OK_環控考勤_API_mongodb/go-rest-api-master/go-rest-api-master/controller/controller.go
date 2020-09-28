@@ -1,4 +1,5 @@
-package main
+//package main
+package controller
 
 import (
 	"context"
@@ -7,18 +8,20 @@ import (
 
 	"github.com/gofiber/fiber"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"my-rest-api/db"
+	//"my-rest-api/model" //只有在create(insert)或update 才需要import model
 )
 
 const dbName = "leapsy_env"                                     //DB
 const collectionNameOfCheckInRecord = "check_in_record"         //Collection
 const collectionNameOfCheckInStatistics = "check_in_statistics" //Collection
 const collectionName = "persion"                                //Collection
-//const port = 8081                                               //API port
-const port = 8000 //API port
+const port = 8081                                               //API port
+//const port = 8000 //API port
 
 // 建立GET POST 路徑
-func newPersonController() {
+func NewPersonController() {
 
 	fmt.Println("測試")
 	app := fiber.New()
@@ -51,7 +54,7 @@ func newPersonController() {
 func getCheckInRecord(c *fiber.Ctx) {
 
 	// 取得 collection
-	collection, err := getMongoDbCollection(dbName, collectionNameOfCheckInRecord)
+	collection, err := db.GetMongoDbCollection(dbName, collectionNameOfCheckInRecord)
 
 	// 若連線有誤
 	if err != nil {
@@ -100,7 +103,7 @@ func getCheckInRecord(c *fiber.Ctx) {
 func getAttendanceOfCheckInStatistics(c *fiber.Ctx) {
 
 	// 取得 collection
-	collection, err := getMongoDbCollection(dbName, collectionNameOfCheckInRecord)
+	collection, err := db.GetMongoDbCollection(dbName, collectionNameOfCheckInRecord)
 
 	// 若連線有誤
 	if err != nil {
@@ -150,7 +153,7 @@ func getAttendanceOfCheckInStatistics(c *fiber.Ctx) {
 func getNotArrivedOfCheckInStatistics(c *fiber.Ctx) {
 
 	// 取得 collection
-	collection, err := getMongoDbCollection(dbName, collectionNameOfCheckInRecord)
+	collection, err := db.GetMongoDbCollection(dbName, collectionNameOfCheckInRecord)
 
 	// 若連線有誤
 	if err != nil {
@@ -201,7 +204,7 @@ func getNotArrivedOfCheckInStatistics(c *fiber.Ctx) {
 func getCheckInStatistics(c *fiber.Ctx) {
 
 	// 取得 collection
-	collection, err := getMongoDbCollection(dbName, collectionNameOfCheckInStatistics)
+	collection, err := db.GetMongoDbCollection(dbName, collectionNameOfCheckInStatistics)
 
 	// 若連線有誤
 	if err != nil {
@@ -247,104 +250,104 @@ func getCheckInStatistics(c *fiber.Ctx) {
 }
 
 /* 以下為範例 Person 相關 functions */
-func getPerson(c *fiber.Ctx) {
-	collection, err := getMongoDbCollection(dbName, collectionName)
-	if err != nil {
-		c.Status(500).Send(err)
-		return
-	}
+// func getPerson(c *fiber.Ctx) {
+// 	collection, err := db.GetMongoDbCollection(dbName, collectionName)
+// 	if err != nil {
+// 		c.Status(500).Send(err)
+// 		return
+// 	}
 
-	var filter bson.M = bson.M{}
+// 	var filter bson.M = bson.M{}
 
-	if c.Params("id") != "" {
+// 	if c.Params("id") != "" {
 
-		/* 按照_id來取出當筆資料*/
-		id := c.Params("id")
-		objID, _ := primitive.ObjectIDFromHex(id)
-		filter = bson.M{"_id": objID}
-	}
+// 		/* 按照_id來取出當筆資料*/
+// 		id := c.Params("id")
+// 		objID, _ := primitive.ObjectIDFromHex(id)
+// 		filter = bson.M{"_id": objID}
+// 	}
 
-	var results []bson.M
-	cur, err := collection.Find(context.Background(), filter)
-	defer cur.Close(context.Background())
+// 	var results []bson.M
+// 	cur, err := collection.Find(context.Background(), filter)
+// 	defer cur.Close(context.Background())
 
-	if err != nil {
-		c.Status(500).Send(err)
-		return
-	}
+// 	if err != nil {
+// 		c.Status(500).Send(err)
+// 		return
+// 	}
 
-	cur.All(context.Background(), &results)
+// 	cur.All(context.Background(), &results)
 
-	if results == nil {
-		c.SendStatus(404)
-		return
-	}
+// 	if results == nil {
+// 		c.SendStatus(404)
+// 		return
+// 	}
 
-	json, _ := json.Marshal(results)
-	c.Send(json)
-}
+// 	json, _ := json.Marshal(results)
+// 	c.Send(json)
+// }
 
-func createPerson(c *fiber.Ctx) {
-	collection, err := getMongoDbCollection(dbName, collectionName)
-	if err != nil {
-		c.Status(500).Send(err)
-		return
-	}
+// func createPerson(c *fiber.Ctx) {
+// 	collection, err := db.GetMongoDbCollection(dbName, collectionName)
+// 	if err != nil {
+// 		c.Status(500).Send(err)
+// 		return
+// 	}
 
-	var person Person
-	json.Unmarshal([]byte(c.Body()), &person)
+// 	var person model.Person
+// 	json.Unmarshal([]byte(c.Body()), &person)
 
-	res, err := collection.InsertOne(context.Background(), person)
-	if err != nil {
-		c.Status(500).Send(err)
-		return
-	}
+// 	res, err := collection.InsertOne(context.Background(), person)
+// 	if err != nil {
+// 		c.Status(500).Send(err)
+// 		return
+// 	}
 
-	response, _ := json.Marshal(res)
-	c.Send(response)
-}
+// 	response, _ := json.Marshal(res)
+// 	c.Send(response)
+// }
 
-func updatePerson(c *fiber.Ctx) {
-	collection, err := getMongoDbCollection(dbName, collectionName)
-	if err != nil {
-		c.Status(500).Send(err)
-		return
-	}
-	var person Person
-	json.Unmarshal([]byte(c.Body()), &person)
+// func updatePerson(c *fiber.Ctx) {
+// 	collection, err := db.GetMongoDbCollection(dbName, collectionName)
+// 	if err != nil {
+// 		c.Status(500).Send(err)
+// 		return
+// 	}
+// 	var person model.Person
+// 	json.Unmarshal([]byte(c.Body()), &person)
 
-	update := bson.M{
-		"$set": person,
-	}
+// 	update := bson.M{
+// 		"$set": person,
+// 	}
 
-	objID, _ := primitive.ObjectIDFromHex(c.Params("id"))
-	res, err := collection.UpdateOne(context.Background(), bson.M{"_id": objID}, update)
+// 	objID, _ := primitive.ObjectIDFromHex(c.Params("id"))
+// 	res, err := collection.UpdateOne(context.Background(), bson.M{"_id": objID}, update)
 
-	if err != nil {
-		c.Status(500).Send(err)
-		return
-	}
+// 	if err != nil {
+// 		c.Status(500).Send(err)
+// 		return
+// 	}
 
-	response, _ := json.Marshal(res)
-	c.Send(response)
-}
+// 	response, _ := json.Marshal(res)
+// 	c.Send(response)
+// }
 
-func deletePerson(c *fiber.Ctx) {
-	collection, err := getMongoDbCollection(dbName, collectionName)
+// func deletePerson(c *fiber.Ctx) {
+// 	collection, err := db.GetMongoDbCollection(dbName, collectionName)
 
-	if err != nil {
-		c.Status(500).Send(err)
-		return
-	}
+// 	if err != nil {
+// 		c.Status(500).Send(err)
+// 		return
+// 	}
 
-	objID, _ := primitive.ObjectIDFromHex(c.Params("id"))
-	res, err := collection.DeleteOne(context.Background(), bson.M{"_id": objID})
+// 	objID, _ := primitive.ObjectIDFromHex(c.Params("id"))
+// 	res, err := collection.DeleteOne(context.Background(), bson.M{"_id": objID})
 
-	if err != nil {
-		c.Status(500).Send(err)
-		return
-	}
+// 	if err != nil {
+// 		c.Status(500).Send(err)
+// 		return
+// 	}
 
-	jsonResponse, _ := json.Marshal(res)
-	c.Send(jsonResponse)
-}
+// 	jsonResponse, _ := json.Marshal(res)
+// 	c.Send(jsonResponse)
+// }

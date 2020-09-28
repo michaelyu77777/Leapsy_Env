@@ -1,4 +1,4 @@
-package main
+package model
 
 type CheckInRecord struct {
 	id            int    //`json:"_id"`
