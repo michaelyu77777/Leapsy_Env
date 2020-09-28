@@ -5,6 +5,7 @@ package db
 import (
 	"context"
 	"log"
+	"my-rest-api/settings"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -15,7 +16,7 @@ import (
 func GetMongoDbConnection() (*mongo.Client, error) {
 
 	//連線mongodb
-	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://localhost:"+settings.PortOfMongoDB))
 
 	if err != nil {
 		log.Fatal(err)

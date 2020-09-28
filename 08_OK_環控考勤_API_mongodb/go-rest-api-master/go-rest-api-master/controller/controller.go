@@ -10,15 +10,16 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 
 	"my-rest-api/db"
+	"my-rest-api/settings"
 	//"my-rest-api/model" //只有在create(insert)或update 才需要import model
 )
 
-const dbName = "leapsy_env"                                     //DB
-const collectionNameOfCheckInRecord = "check_in_record"         //Collection
-const collectionNameOfCheckInStatistics = "check_in_statistics" //Collection
-const collectionName = "persion"                                //Collection
-const port = 8081                                               //API port
-//const port = 8000 //API port
+// const dbName = "leapsy_env"                                     //DB
+// const collectionNameOfCheckInRecord = "check_in_record"         //Collection
+// const collectionNameOfCheckInStatistics = "check_in_statistics" //Collection
+// const collectionName = "persion"                                //Collection
+// const port = 8081                                               //API port
+// const port = 8000 //API port
 
 // 建立GET POST 路徑
 func NewPersonController() {
@@ -46,7 +47,7 @@ func NewPersonController() {
 	// app.Put("/person/:id", updatePerson)
 	// app.Delete("/person/:id", deletePerson)
 
-	app.Listen(port)
+	app.Listen(settings.PortOfAPI)
 }
 
 /* 以下為 CheckInRecord 相關 functions */
@@ -54,7 +55,7 @@ func NewPersonController() {
 func getCheckInRecord(c *fiber.Ctx) {
 
 	// 取得 collection
-	collection, err := db.GetMongoDbCollection(dbName, collectionNameOfCheckInRecord)
+	collection, err := db.GetMongoDbCollection(settings.DbName, settings.CollectionNameOfCheckInRecord)
 
 	// 若連線有誤
 	if err != nil {
@@ -103,7 +104,7 @@ func getCheckInRecord(c *fiber.Ctx) {
 func getAttendanceOfCheckInStatistics(c *fiber.Ctx) {
 
 	// 取得 collection
-	collection, err := db.GetMongoDbCollection(dbName, collectionNameOfCheckInRecord)
+	collection, err := db.GetMongoDbCollection(settings.DbName, settings.CollectionNameOfCheckInRecord)
 
 	// 若連線有誤
 	if err != nil {
@@ -153,7 +154,7 @@ func getAttendanceOfCheckInStatistics(c *fiber.Ctx) {
 func getNotArrivedOfCheckInStatistics(c *fiber.Ctx) {
 
 	// 取得 collection
-	collection, err := db.GetMongoDbCollection(dbName, collectionNameOfCheckInRecord)
+	collection, err := db.GetMongoDbCollection(settings.DbName, settings.CollectionNameOfCheckInRecord)
 
 	// 若連線有誤
 	if err != nil {
@@ -204,7 +205,7 @@ func getNotArrivedOfCheckInStatistics(c *fiber.Ctx) {
 func getCheckInStatistics(c *fiber.Ctx) {
 
 	// 取得 collection
-	collection, err := db.GetMongoDbCollection(dbName, collectionNameOfCheckInStatistics)
+	collection, err := db.GetMongoDbCollection(settings.DbName, settings.CollectionNameOfCheckInStatistics)
 
 	// 若連線有誤
 	if err != nil {
