@@ -1,5 +1,6 @@
 package model
 
+//範例model
 type Person struct {
 	_id       string `json:"id,omitempty"`
 	FirstName string `json:"firstname,omitempty"`
