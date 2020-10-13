@@ -37,32 +37,48 @@ var config Config = Config{}
 
 var worker = runtime.NumCPU()
 
-//手机号码
-type PhoneArea struct {
-	Phone     string "PhoneStart"
-	Area      string "Province"
-	City      string "City"
-	PhoneType string "PhoneType"
-	Code      string "Code"
+// //手机号码
+// type PhoneArea struct {
+// 	Phone     string "PhoneStart"
+// 	Area      string "Province"
+// 	City      string "City"
+// 	PhoneType string "PhoneType"
+// 	Code      string "Code"
+// }
+
+//日打卡紀錄檔
+type DailyRecord struct {
+	Date       string "date"
+	Name       string "name"
+	CardID     string "cardID"
+	Time       string "time"
+	Message    string "message"
+	EmployeeID string "employeeID"
 }
+
+// //配置
+// type Config struct {
+// 	MongodbServer string
+// 	PhoneareaFile string
+// }
 
 //配置
 type Config struct {
-	MongodbServer string
-	PhoneareaFile string
+	MongodbServer   string
+	DailyRecordFile string
 }
 
 /*导入手机地理信息*/
 func ImportPhoneInfo() {
-	var chanPhoneArea = make(chan PhoneArea)
+	var chanDailyRecord = make(chan DailyRecord)
 	// 标记完成
 	dones := make(chan struct{}, worker)
 
 	//读取文件信息
-	go addPhoneInfo(chanPhoneArea)
+	go addPhoneInfo(chanDailyRecord)
 	//插入mongodb
 	for i := 0; i < worker; i++ {
-		go doPhoneInfo(chanPhoneArea, dones)
+		go doPhoneInfo(chanDailyRecord, dones)
 	}
 	//等待完成
 	awaitForCloseResult(dones)
@@ -70,10 +86,11 @@ func ImportPhoneInfo() {
 }
 
 /*
-获取手机地理信息
-*/
-func addPhoneInfo(chanPhoneArea chan<- PhoneArea) {
-	file, err := os.Open(config.PhoneareaFile)
+ * 取得每日打卡資料
+ * 讀取的檔案().csv 或 .txt檔案)，編碼要為UTF-8，繁體中文才能正確被讀取
+ */
+func addPhoneInfo(chanDailyRecord chan<- DailyRecord) {
+	file, err := os.Open(config.DailyRecordFile)
 
 	if err != nil {
 		fmt.Println("打開文件失敗", err)
@@ -87,23 +104,25 @@ func addPhoneInfo(chanPhoneArea chan<- PhoneArea) {
 		line, err := reader.Read()
 
 		if err == io.EOF {
-			close(chanPhoneArea)
+
+			close(chanDailyRecord)
 			fmt.Println("文件讀取完成")
 			break
 		} else if err != nil {
-			close(chanPhoneArea)
+			close(chanDailyRecord)
 			fmt.Println("Error:", err)
 			break
 		}
-		phonearea := PhoneArea{line[0], line[1], line[2], line[3], line[4]}
-		chanPhoneArea <- phonearea
+
+		dailyrecord := DailyRecord{line[0], line[1], line[2], line[3], line[4], line[5]}
+		chanDailyRecord <- dailyrecord
 	}
 }
 
 /*
-插入信息到mongodb
+插入資料到mongodb
 */
-func doPhoneInfo(chanPhoneArea <-chan PhoneArea, dones chan<- struct{}) {
+func doPhoneInfo(chanDailyRecord <-chan DailyRecord, dones chan<- struct{}) {
 	//开启loop个协程
 
 	session, err := mgo.Dial(config.MongodbServer)
@@ -113,11 +132,11 @@ func doPhoneInfo(chanPhoneArea <-chan PhoneArea, dones chan<- struct{}) {
 		return
 	}
 	defer session.Close()
-	c := session.DB("Test").C("PhoneAreaInfo")
+	c := session.DB("leapsy_env").C("dailyRecord_real")
 
-	for phonearea := range chanPhoneArea {
-		fmt.Println("插入：", phonearea)
-		c.Insert(&phonearea)
+	for dailyrecord := range chanDailyRecord {
+		fmt.Println("插入：", dailyrecord)
+		c.Insert(&dailyrecord)
 	}
 
 	dones <- struct{}{}
