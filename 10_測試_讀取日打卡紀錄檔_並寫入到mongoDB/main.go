@@ -10,7 +10,13 @@ import (
 
 	//"labix.org/v2/mgo"
 	"gopkg.in/mgo.v2"
+
+	//"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/encoding/traditionalchinese"
+	"golang.org/x/text/transform"
 )
+
+// var enc = traditionalchinese.Big5
 
 /*
 初始化配置
@@ -31,20 +37,36 @@ func init() {
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	ImportPhoneInfo()
+	// exampleReadGBK("Rec20201013.csv")
 }
+
+// func exampleReadGBK(filename string) {
+// 	// Read UTF-8 from a GBK encoded file.
+// 	f, err := os.Open(filename)
+// 	if err != nil {
+// 		fmt.Println(err)
+// 	}
+// 	r := transform.NewReader(f, enc.NewDecoder())
+
+// 	// Read converted UTF-8 from `r` as needed.
+// 	// As an example we'll read line-by-line showing what was read:
+// 	sc := bufio.NewScanner(r)
+// 	for sc.Scan() {
+// 		b := sc.Bytes()
+// 		fmt.Printf("Read line: %s\n", b)
+// 	}
+// 	if err = sc.Err(); err != nil {
+// 		fmt.Println(err)
+// 	}
+
+// 	if err = f.Close(); err != nil {
+// 		fmt.Println(err)
+// 	}
+// }
 
 var config Config = Config{}
 
 var worker = runtime.NumCPU()
-
-// //手机号码
-// type PhoneArea struct {
-// 	Phone     string "PhoneStart"
-// 	Area      string "Province"
-// 	City      string "City"
-// 	PhoneType string "PhoneType"
-// 	Code      string "Code"
-// }
 
 //日打卡紀錄檔
 type DailyRecord struct {
@@ -55,12 +77,6 @@ type DailyRecord struct {
 	Message    string "message"
 	EmployeeID string "employeeID"
 }
-
-// //配置
-// type Config struct {
-// 	MongodbServer string
-// 	PhoneareaFile string
-// }
 
 //配置
 type Config struct {
@@ -89,7 +105,9 @@ func ImportPhoneInfo() {
  * 取得每日打卡資料
  * 讀取的檔案().csv 或 .txt檔案)，編碼要為UTF-8，繁體中文才能正確被讀取
  */
+
 func addPhoneInfo(chanDailyRecord chan<- DailyRecord) {
+
 	file, err := os.Open(config.DailyRecordFile)
 
 	if err != nil {
@@ -99,6 +117,9 @@ func addPhoneInfo(chanDailyRecord chan<- DailyRecord) {
 	defer file.Close()
 	fmt.Println("讀取文件")
 	reader := csv.NewReader(file)
+
+	// 指定編碼:將繁體Big5轉成UTF-8才會正確
+	big5ToUTF8Decoder := traditionalchinese.Big5.NewDecoder()
 
 	for {
 		line, err := reader.Read()
@@ -114,7 +135,12 @@ func addPhoneInfo(chanDailyRecord chan<- DailyRecord) {
 			break
 		}
 
-		dailyrecord := DailyRecord{line[0], line[1], line[2], line[3], line[4], line[5]}
+		// 將名字(Name) 繁體Big5轉成UTF-8 才能正常儲存
+		big5Name := line[1] // 測試的 Big5 編碼
+		utf8Name, _, _ := transform.String(big5ToUTF8Decoder, big5Name)
+		//fmt.Println(utf8Name) // 顯示"名字"
+
+		dailyrecord := DailyRecord{line[0], utf8Name, line[2], line[3], line[4], line[5]}
 		chanDailyRecord <- dailyrecord
 	}
 }
