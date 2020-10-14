@@ -101,9 +101,7 @@ func addDailyRecord(chanDailyRecord chan<- DailyRecord) {
 
 	// 打開每日打卡紀錄檔案(不問帳號密碼?)
 	//file, err := os.Open("Z:\\" + fileName)
-	//file, err := os.Open("\\\\leapsy-nas3\\CheckInRecord\\" + fileName)
-
-	file, err := os.Open("\\\\leapsy-nas3\\Accounting\\test\\Rec20201013.csv")
+	file, err := os.Open("\\\\leapsy-nas3\\CheckInRecord\\" + fileName)
 
 	if err != nil {
 		fmt.Println("打開文件失敗", err)
