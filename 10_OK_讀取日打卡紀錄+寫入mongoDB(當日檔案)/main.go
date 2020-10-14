@@ -37,8 +37,10 @@ type DailyRecord struct {
 
 //配置
 type Config struct {
-	MongodbServer   string
-	DailyRecordFile string
+	MongodbServer string
+	DBName        string
+
+	CollectionName string
 }
 
 func main() {
@@ -103,7 +105,7 @@ func deleteDailyRecordToday() {
 
 	// Delete record
 	currentTime := time.Now()           //取今天日
-	t := currentTime.Format("20060102") //取年月日格式
+	t := currentTime.Format("20060102") //格式為年月日
 	fmt.Println("移除資料日期為 date: ", t)
 
 	info, err := c.RemoveAll(bson.M{"date": t}) //移除今天所有舊的紀錄(格式年月日)
