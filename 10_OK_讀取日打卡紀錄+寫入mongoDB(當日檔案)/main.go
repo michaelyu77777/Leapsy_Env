@@ -12,6 +12,7 @@ import (
 
 	//"labix.org/v2/mgo"
 	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 
 	"golang.org/x/text/encoding/traditionalchinese" // 繁體中文編碼
 	"golang.org/x/text/transform"
@@ -32,6 +33,12 @@ type DailyRecord struct {
 	Time       string "time"
 	Message    string "message"
 	EmployeeID string "employeeID"
+}
+
+//配置
+type Config struct {
+	MongodbServer   string
+	DailyRecordFile string
 }
 
 func main() {
@@ -56,14 +63,11 @@ func init() {
 	}
 }
 
-//配置
-type Config struct {
-	MongodbServer   string
-	DailyRecordFile string
-}
-
-/*導入每日打卡資料*/
+/*主程式-每日打卡資料*/
 func ImportDailyRecord() {
+
+	// 移除當日所有舊紀錄
+	deleteDailyRecordToday()
 
 	// 建立 channel 存放 DailyRecord型態資料
 	chanDailyRecord := make(chan DailyRecord)
@@ -72,7 +76,7 @@ func ImportDailyRecord() {
 	dones := make(chan struct{}, worker)
 
 	// 將日打卡紀錄檔案內容讀出，並加到 chanDailyRecord 裡面
-	go addDailyRecord(chanDailyRecord)
+	go addDailyRecordToChannel(chanDailyRecord)
 
 	// 將chanDailyRecord 插入mongodb資料庫
 	for i := 0; i < worker; i++ {
@@ -83,11 +87,40 @@ func ImportDailyRecord() {
 	fmt.Println("日打卡紀錄插入完畢")
 }
 
+/**
+ * 刪除當日所有舊紀錄
+ */
+
+func deleteDailyRecordToday() {
+
+	session, err := mgo.Dial(config.MongodbServer)
+	if err != nil {
+		fmt.Println("錯誤")
+		panic(err)
+	}
+	defer session.Close()
+	c := session.DB("leapsy_env").C("dailyRecord_real")
+
+	// Delete record
+	currentTime := time.Now()           //取今天日
+	t := currentTime.Format("20060102") //取年月日格式
+	fmt.Println("移除資料日期為 date: ", t)
+
+	info, err := c.RemoveAll(bson.M{"date": t}) //移除今天所有舊的紀錄(格式年月日)
+	if err != nil {
+		fmt.Printf("移除當日所有舊紀錄失敗 %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("ChangeInfo info: ", info)
+
+}
+
 /*
- * 讀取今日打卡資料
+ * 讀取今日打卡資料 加入到channel中
  * 讀取的檔案().csv 或 .txt檔案)，編碼要為UTF-8，繁體中文才能正確被讀取
  */
-func addDailyRecord(chanDailyRecord chan<- DailyRecord) {
+func addDailyRecordToChannel(chanDailyRecord chan<- DailyRecord) {
 
 	// 取得今日日期
 	currentTime := time.Now()
