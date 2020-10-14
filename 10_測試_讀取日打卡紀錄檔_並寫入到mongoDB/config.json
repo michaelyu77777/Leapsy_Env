@@ -1,6 +1,4 @@
 
 {
-    "MongodbServer" : "127.0.0.1",
-    "DailyRecordFile" : "Rec20201013.csv",
-    "PhoneareaFile" : "phonearea.txt"
+    "MongodbServer" : "127.0.0.1"
 }

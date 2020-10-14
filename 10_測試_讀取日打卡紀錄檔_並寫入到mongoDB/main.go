@@ -7,6 +7,8 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"strconv"
+	"time"
 
 	//"labix.org/v2/mgo"
 	"gopkg.in/mgo.v2"
@@ -33,6 +35,7 @@ type DailyRecord struct {
 }
 
 func main() {
+
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	ImportDailyRecord()
 }
@@ -59,7 +62,7 @@ type Config struct {
 	DailyRecordFile string
 }
 
-/*导入手机地理信息*/
+/*導入每日打卡資料*/
 func ImportDailyRecord() {
 
 	// 建立 channel 存放 DailyRecord型態資料
@@ -81,13 +84,26 @@ func ImportDailyRecord() {
 }
 
 /*
- * 讀取每日打卡資料
+ * 讀取今日打卡資料
  * 讀取的檔案().csv 或 .txt檔案)，編碼要為UTF-8，繁體中文才能正確被讀取
  */
 func addDailyRecord(chanDailyRecord chan<- DailyRecord) {
 
-	// 打開每日打卡紀錄檔案
-	file, err := os.Open(config.DailyRecordFile)
+	// 取得今日日期
+	currentTime := time.Now()
+	year := strconv.Itoa(currentTime.Year())
+	month := strconv.Itoa(int(currentTime.Month()))
+	day := strconv.Itoa(currentTime.Day())
+
+	//檔案名稱
+	fileName := "Rec" + year + month + day + ".csv"
+	fmt.Println("日打卡紀錄檔名稱:", fileName)
+
+	// 打開每日打卡紀錄檔案(不問帳號密碼?)
+	//file, err := os.Open("Z:\\" + fileName)
+	//file, err := os.Open("\\\\leapsy-nas3\\CheckInRecord\\" + fileName)
+
+	file, err := os.Open("\\\\leapsy-nas3\\Accounting\\test\\Rec20201013.csv")
 
 	if err != nil {
 		fmt.Println("打開文件失敗", err)
