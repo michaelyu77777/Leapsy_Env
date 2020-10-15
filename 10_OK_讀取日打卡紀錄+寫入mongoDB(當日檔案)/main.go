@@ -37,9 +37,8 @@ type DailyRecord struct {
 
 //配置
 type Config struct {
-	MongodbServer string
-	DBName        string
-
+	MongodbServer  string
+	DBName         string
 	CollectionName string
 }
 
@@ -101,7 +100,7 @@ func deleteDailyRecordToday() {
 		panic(err)
 	}
 	defer session.Close()
-	c := session.DB("leapsy_env").C("dailyRecord_real")
+	c := session.DB(config.DBName).C(config.CollectionName)
 
 	// Delete record
 	currentTime := time.Now()           //取今天日
@@ -191,7 +190,7 @@ func insertDailyRecord(chanDailyRecord <-chan DailyRecord, dones chan<- struct{}
 		return
 	}
 	defer session.Close()
-	c := session.DB("leapsy_env").C("dailyRecord_real")
+	c := session.DB(config.DBName).C(config.CollectionName)
 
 	for dailyrecord := range chanDailyRecord {
 		fmt.Println("插入：", dailyrecord)
