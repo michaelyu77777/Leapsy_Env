@@ -37,14 +37,19 @@ type DailyRecord struct {
 
 //配置
 type Config struct {
-	MongodbServer   string
-	DailyRecordFile string
+	//MongodbServer   string
+	//DailyRecordFile string
 }
 
 func main() {
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	ImportDailyRecord()
+
+	// 暫停看結果
+	fmt.Println("Press any key to exit")
+	var input string
+	fmt.Scanf("%s", &input)
 }
 
 /*
@@ -93,7 +98,8 @@ func ImportDailyRecord() {
 
 func deleteDailyRecordToday() {
 
-	session, err := mgo.Dial(config.MongodbServer)
+	// session, err := mgo.Dial(config.MongodbServer)
+	session, err := mgo.Dial("127.0.0.1")
 	if err != nil {
 		fmt.Println("錯誤")
 		panic(err)
@@ -182,7 +188,8 @@ func addDailyRecordToChannel(chanDailyRecord chan<- DailyRecord) {
 func insertDailyRecord(chanDailyRecord <-chan DailyRecord, dones chan<- struct{}) {
 	//开启loop个协程
 
-	session, err := mgo.Dial(config.MongodbServer)
+	// session, err := mgo.Dial(config.MongodbServer)
+	session, err := mgo.Dial("127.0.0.1")
 	if err != nil {
 		fmt.Println("錯誤")
 		panic(err)
