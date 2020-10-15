@@ -56,7 +56,8 @@ func main() {
  * 初始化配置
  */
 func init() {
-	file, _ := os.Open("config.json")
+	//file, _ := os.Open("config.json")
+	file, _ := os.Open("D:\\workspace-GO\\Leapsy_Env\\10_OK_讀取日打卡紀錄+寫入mongoDB(當日檔案)\\config.json")
 	buf := make([]byte, 2048)
 
 	n, _ := file.Read(buf)
@@ -139,7 +140,7 @@ func addDailyRecordToChannel(chanDailyRecord chan<- DailyRecord) {
 	fmt.Println("日打卡紀錄檔名稱:", fileName)
 
 	// 打開每日打卡紀錄檔案(不問帳號密碼?)
-	//file, err := os.Open("Z:\\" + fileName)
+	// file, err := os.Open("Z:\\" + fileName)
 	file, err := os.Open("\\\\leapsy-nas3\\CheckInRecord\\" + fileName)
 
 	if err != nil {
