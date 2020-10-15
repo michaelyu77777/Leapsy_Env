@@ -37,9 +37,8 @@ type DailyRecord struct {
 
 //配置
 type Config struct {
-	MongodbServer  string
-	DBName         string
-	CollectionName string
+	MongodbServer   string
+	DailyRecordFile string
 }
 
 func main() {
@@ -100,11 +99,11 @@ func deleteDailyRecordToday() {
 		panic(err)
 	}
 	defer session.Close()
-	c := session.DB(config.DBName).C(config.CollectionName)
+	c := session.DB("leapsy_env").C("dailyRecord_real")
 
 	// Delete record
 	currentTime := time.Now()           //取今天日
-	t := currentTime.Format("20060102") //格式為年月日
+	t := currentTime.Format("20060102") //取年月日格式
 	fmt.Println("移除資料日期為 date: ", t)
 
 	info, err := c.RemoveAll(bson.M{"date": t}) //移除今天所有舊的紀錄(格式年月日)
@@ -190,7 +189,7 @@ func insertDailyRecord(chanDailyRecord <-chan DailyRecord, dones chan<- struct{}
 		return
 	}
 	defer session.Close()
-	c := session.DB(config.DBName).C(config.CollectionName)
+	c := session.DB("leapsy_env").C("dailyRecord_real")
 
 	for dailyrecord := range chanDailyRecord {
 		fmt.Println("插入：", dailyrecord)
