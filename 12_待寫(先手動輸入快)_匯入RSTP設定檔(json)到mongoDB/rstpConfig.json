@@ -1,0 +1,16 @@
+{
+    "Video":{
+        "H264_Profile":2,
+        "H264_AVC_Level":1024,
+        "resolution":"1280,720",
+        "frame rate":30,
+        "video_bitrate":2048000,
+        "I-Frame":2
+    },
+    "Audio":{
+        "sampleRate":44100,
+        "ChannelCount":2,
+        "bitrate":64000
+    },
+    "EnableAudioStream":false
+}
