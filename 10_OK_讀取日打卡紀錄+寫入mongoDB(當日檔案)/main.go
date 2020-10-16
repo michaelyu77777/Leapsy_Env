@@ -35,10 +35,12 @@ type DailyRecord struct {
 	EmployeeID string "employeeID"
 }
 
-//配置
+// 配置
 type Config struct {
-	//MongodbServer   string
-	//DailyRecordFile string
+	MongodbServer             string
+	DBName                    string
+	CollectionName            string
+	DailyRecordFileFolderPath string
 }
 
 func main() {
@@ -69,7 +71,7 @@ func init() {
 	}
 }
 
-/*主程式-每日打卡資料*/
+// ImportDailyRecord :主程式-每日打卡資料
 func ImportDailyRecord() {
 
 	// 移除當日所有舊紀錄
@@ -99,14 +101,15 @@ func ImportDailyRecord() {
 
 func deleteDailyRecordToday() {
 
-	// session, err := mgo.Dial(config.MongodbServer)
-	session, err := mgo.Dial("127.0.0.1")
+	session, err := mgo.Dial(config.MongodbServer)
+	//session, err := mgo.Dial("127.0.0.1")
 	if err != nil {
 		fmt.Println("錯誤")
 		panic(err)
 	}
 	defer session.Close()
-	c := session.DB("leapsy_env").C("dailyRecord_real")
+	c := session.DB(config.DBName).C(config.CollectionName)
+	//c := session.DB("leapsy_env").C("dailyRecord_real")
 
 	// Delete record
 	currentTime := time.Now()           //取今天日
@@ -141,7 +144,8 @@ func addDailyRecordToChannel(chanDailyRecord chan<- DailyRecord) {
 
 	// 打開每日打卡紀錄檔案(不問帳號密碼?)
 	// file, err := os.Open("Z:\\" + fileName)
-	file, err := os.Open("\\\\leapsy-nas3\\CheckInRecord\\" + fileName)
+	//file, err := os.Open("\\\\leapsy-nas3\\CheckInRecord\\" + fileName)
+	file, err := os.Open(config.DailyRecordFileFolderPath + fileName)
 
 	if err != nil {
 		fmt.Println("打開文件失敗", err)
@@ -189,15 +193,16 @@ func addDailyRecordToChannel(chanDailyRecord chan<- DailyRecord) {
 func insertDailyRecord(chanDailyRecord <-chan DailyRecord, dones chan<- struct{}) {
 	//开启loop个协程
 
-	// session, err := mgo.Dial(config.MongodbServer)
-	session, err := mgo.Dial("127.0.0.1")
+	session, err := mgo.Dial(config.MongodbServer)
+	//session, err := mgo.Dial("127.0.0.1")
 	if err != nil {
 		fmt.Println("錯誤")
 		panic(err)
 		return
 	}
 	defer session.Close()
-	c := session.DB("leapsy_env").C("dailyRecord_real")
+	c := session.DB(config.DBName).C(config.CollectionName)
+	//c := session.DB("leapsy_env").C("dailyRecord_real")
 
 	for dailyrecord := range chanDailyRecord {
 		fmt.Println("插入：", dailyrecord)

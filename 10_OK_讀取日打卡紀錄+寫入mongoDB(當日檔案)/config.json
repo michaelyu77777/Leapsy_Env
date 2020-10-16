@@ -1,4 +1,7 @@
 
 {
-    
+    "MongodbServer":"127.0.0.1",
+    "DBName":"leapsy_env",
+    "CollectionName":"dailyRecord_real",
+    "DailyRecordFileFolderPath":"\\\\leapsy-nas3\\CheckInRecord\\"
 }
