@@ -49,9 +49,9 @@ func main() {
 	ImportDailyRecord()
 
 	// 暫停看結果
-	fmt.Println("Press any key to exit")
-	var input string
-	fmt.Scanf("%s", &input)
+	// fmt.Println("Press any key to exit")
+	// var input string
+	// fmt.Scanf("%s", &input)
 }
 
 /*
