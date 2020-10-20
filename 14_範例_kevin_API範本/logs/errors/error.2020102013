@@ -1,0 +1,1 @@
+time="2020-10-20T13:52:44+08:00" level=panic msg="環控歷史紀錄資料庫 localhost:27017 斷接失敗: client is disconnected" source="databases/MongoDB.go:112"
