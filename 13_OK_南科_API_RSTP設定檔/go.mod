@@ -8,6 +8,7 @@ require (
 	github.com/gofiber/fiber v1.14.6
 	github.com/gofiber/template v1.0.0 // indirect
 	github.com/google/uuid v1.1.1 // indirect
+	github.com/gorilla/mux v1.8.0
 	github.com/json-iterator/go v1.1.9 // indirect
 	github.com/kisielk/errcheck v1.2.0 // indirect
 	github.com/valyala/fasttemplate v1.1.0 // indirect
