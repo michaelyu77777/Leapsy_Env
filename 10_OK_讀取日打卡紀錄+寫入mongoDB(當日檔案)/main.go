@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"runtime"
-	"strconv"
 	"time"
 
 	//"labix.org/v2/mgo"
@@ -48,10 +47,6 @@ func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	ImportDailyRecord()
 
-	// 暫停看結果
-	// fmt.Println("Press any key to exit")
-	// var input string
-	// fmt.Scanf("%s", &input)
 }
 
 /*
@@ -132,14 +127,29 @@ func deleteDailyRecordToday() {
  */
 func addDailyRecordToChannel(chanDailyRecord chan<- DailyRecord) {
 
-	// 取得今日日期
+	// 取得今日:年月日時
 	currentTime := time.Now()
-	year := strconv.Itoa(currentTime.Year())
-	month := strconv.Itoa(int(currentTime.Month()))
-	day := strconv.Itoa(currentTime.Day())
+
+	//指定要抓的csv檔名
+	fileName := ""
+
+	//若現在是九點前:取昨日
+	if currentTime.Hour() > 9 {
+		fmt.Println("九點前:取昨日(hour=", currentTime.Hour())
+
+		yesterday := currentTime.AddDate(0, 0, -1)
+		t := yesterday.Format("20060102") //取年月日格式
+		fileName = "Rec" + t + ".csv"
+	} else {
+		//取今日
+		fmt.Println("九點後:取今日(hour=", currentTime.Hour())
+
+		t := currentTime.Format("20060102") //取年月日格式
+		fileName = "Rec" + t + ".csv"
+	}
 
 	//檔案名稱
-	fileName := "Rec" + year + month + day + ".csv"
+	//fileName := "Rec" + year + month + day + ".csv"
 	fmt.Println("日打卡紀錄檔名稱:", fileName)
 
 	// 打開每日打卡紀錄檔案(不問帳號密碼?)
