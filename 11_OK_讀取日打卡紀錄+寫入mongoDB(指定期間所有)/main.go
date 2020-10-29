@@ -1,13 +1,16 @@
 package main
 
 import (
+	"bufio"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 
 	//"labix.org/v2/mgo"
@@ -39,8 +42,99 @@ type DailyRecord struct {
 
 func main() {
 
-	runtime.GOMAXPROCS(runtime.NumCPU())
-	ImportDailyRecord()
+	/**主功能*/
+	//runtime.GOMAXPROCS(runtime.NumCPU())
+	//ImportDailyRecord()
+
+	/**測試開文字檔*/
+	readTsFile("20170630.st")
+}
+
+func readTsFile(fileName string) {
+
+	// 讀檔
+	file, err := os.Open(fileName)
+	if err != nil {
+
+		log_err.WithFields(logrus.Fields{
+			"trace":    "trace-0005",
+			"err":      err,
+			"fileName": fileName,
+		}).Error("打開檔案失敗")
+
+		log.Fatal(err)
+	}
+	defer func() {
+		if err = file.Close(); err != nil {
+			log_err.WithFields(logrus.Fields{
+				"trace":    "trace-0006",
+				"err":      err,
+				"fileName": fileName,
+			}).Error("關閉檔案失敗")
+
+			log.Fatal(err)
+		}
+	}()
+
+	// 讀檔
+	scanner := bufio.NewScanner(file)
+
+	// 一行一行讀
+	counter := 0         // 行號
+	for scanner.Scan() { // internally, it advances token based on sperator
+
+		// 讀進一行(Big5)
+		big5Name := scanner.Text()
+		counter++
+
+		//轉成utf8(繁體)
+		utf8Name, _, _ := transform.String(big5ToUTF8Decoder, big5Name)
+
+		//fmt.Println(utf8Name)
+		//fmt.Println(scanner.Bytes()) // token in bytes
+
+		// 若內容等於 空白" " ==0
+		if strings.Compare(" ", utf8Name[139:140]) == 0 {
+
+			fmt.Println("姓名空白, 行號:", counter)
+			log_info.WithFields(logrus.Fields{
+				"fileName": fileName,
+				"trace":    "trace-0006",
+				"行號":       counter,
+				"日期":       utf8Name[27:37],
+				"時間":       utf8Name[37:45],
+				"整列內容":     utf8Name,
+			}).Info("姓名空白列")
+
+		} else if strings.Compare("ADMIN", utf8Name[139:144]) == 0 {
+			//若內容等於ADMIN
+
+			fmt.Println("ADMIN管理員, 行號:", counter)
+			log_info.WithFields(logrus.Fields{
+				"fileName": fileName,
+				"trace":    "trace-0007",
+				"行號":       counter,
+				"日期":       utf8Name[27:37],
+				"時間":       utf8Name[37:45],
+				"整列內容":     utf8Name,
+			}).Info("ADMIN列")
+
+		} else {
+			fmt.Println(utf8Name[15:27], utf8Name[27:37], utf8Name[37:45], utf8Name[139:144], utf8Name[144:153])
+			log_info.WithFields(logrus.Fields{
+				"fileName": fileName,
+				"trace":    "trace-0008",
+				"行號":       counter,
+				"卡號":       utf8Name[15:27],
+				"日期":       utf8Name[27:37],
+				"時間":       utf8Name[37:45],
+				"員工編號":     utf8Name[139:144],
+				"姓名":       utf8Name[144:153],
+			}).Info("打卡內容")
+		}
+
+	}
+
 }
 
 //Log檔
@@ -107,6 +201,12 @@ func init() {
 	err := json.Unmarshal(buf[:n], &config)
 	if err != nil {
 		panic(err)
+
+		log_err.WithFields(logrus.Fields{
+			"trace": "trace-0001",
+			"err":   err,
+		}).Error("將設定讀到config變數中失敗")
+
 		fmt.Println(err)
 	}
 }
@@ -189,7 +289,7 @@ func addDailyRecordForManyDays(chanDailyRecord chan<- DailyRecord) {
 		if err != nil {
 			fmt.Println("打開檔案失敗", err)
 			log_err.WithFields(logrus.Fields{
-				"trace":    "trace-0001",
+				"trace":    "trace-0002",
 				"err":      err,
 				"fileName": fileName,
 			}).Error("打開檔案失敗")
@@ -225,7 +325,7 @@ func addDailyRecordForManyDays(chanDailyRecord chan<- DailyRecord) {
 				fmt.Println("Error:", err)
 
 				log_err.WithFields(logrus.Fields{
-					"trace":    "trace-0002",
+					"trace":    "trace-0003",
 					"err":      err,
 					"fileName": fileName,
 				}).Error("關閉channel")
@@ -270,7 +370,7 @@ func insertDailyRecord(chanDailyRecord <-chan DailyRecord, dones chan<- struct{}
 		fmt.Println("打卡紀錄插入錯誤(insertDailyRecord)")
 
 		log_err.WithFields(logrus.Fields{
-			"trace": "trace-0003",
+			"trace": "trace-0004",
 			"err":   err,
 		}).Error("打卡紀錄插入錯誤(insertDailyRecord)")
 
