@@ -47,7 +47,8 @@ func main() {
 	//ImportDailyRecord()
 
 	/**測試開文字檔*/
-	readTsFile("20170630.st")
+	readTsFile("20170626.st")
+	//readTsFile("20170630.st")
 }
 
 func readTsFile(fileName string) {
@@ -90,47 +91,45 @@ func readTsFile(fileName string) {
 		//轉成utf8(繁體)
 		utf8Name, _, _ := transform.String(big5ToUTF8Decoder, big5Name)
 
-		//fmt.Println(utf8Name)
-		//fmt.Println(scanner.Bytes()) // token in bytes
+		//fmt.Println(utf8Name[140:145]) //判斷ADMIN
+		//fmt.Println(utf8Name[140:141]) //判斷空白
+		//fmt.Println(utf8Name[144:153]) //判斷中文名
 
-		// 若內容等於 空白" " ==0
-		if strings.Compare(" ", utf8Name[139:140]) == 0 {
+		// 排除 ADMIN / 排除空白/ 才取名字
+		if strings.Compare("ADMIN", utf8Name[140:145]) == 0 {
+			fmt.Println("找到ADMIN:", utf8Name[140:145])
 
-			fmt.Println("姓名空白, 行號:", counter)
-			log_info.WithFields(logrus.Fields{
-				"fileName": fileName,
-				"trace":    "trace-0006",
-				"行號":       counter,
-				"日期":       utf8Name[27:37],
-				"時間":       utf8Name[37:45],
-				"整列內容":     utf8Name,
-			}).Info("姓名空白列")
-
-		} else if strings.Compare("ADMIN", utf8Name[139:144]) == 0 {
-			//若內容等於ADMIN
-
-			fmt.Println("ADMIN管理員, 行號:", counter)
-			log_info.WithFields(logrus.Fields{
-				"fileName": fileName,
-				"trace":    "trace-0007",
-				"行號":       counter,
-				"日期":       utf8Name[27:37],
-				"時間":       utf8Name[37:45],
-				"整列內容":     utf8Name,
-			}).Info("ADMIN列")
-
-		} else {
-			fmt.Println(utf8Name[15:27], utf8Name[27:37], utf8Name[37:45], utf8Name[139:144], utf8Name[144:153])
 			log_info.WithFields(logrus.Fields{
 				"fileName": fileName,
 				"trace":    "trace-0008",
+				"行號":       counter,
+				"值":        utf8Name[140:145],
+			}).Info("找到ADMIN")
+
+		} else if strings.Compare(" ", utf8Name[140:141]) == 0 {
+			fmt.Println("找到空白:", utf8Name[140:141])
+
+			log_info.WithFields(logrus.Fields{
+				"fileName": fileName,
+				"trace":    "trace-0009",
+				"行號":       counter,
+				"值":        utf8Name[140:141],
+			}).Info("找到空白")
+
+		} else {
+
+			fmt.Println("找到人名", utf8Name[15:27], utf8Name[27:37], utf8Name[37:45], utf8Name[139:144], utf8Name[144:153])
+
+			log_info.WithFields(logrus.Fields{
+				"fileName": fileName,
+				"trace":    "trace-0010",
 				"行號":       counter,
 				"卡號":       utf8Name[15:27],
 				"日期":       utf8Name[27:37],
 				"時間":       utf8Name[37:45],
 				"員工編號":     utf8Name[139:144],
 				"姓名":       utf8Name[144:153],
-			}).Info("打卡內容")
+			}).Info("找到人名")
 		}
 
 	}
