@@ -37,16 +37,28 @@ type DailyRecord struct {
 	CardID     string `cardID`
 	Time       string `time`
 	EmployeeID string `employeeID`
+	//Message    string `msg`
 	//Message    string `message`
 }
 
 // 打卡紀錄(.ts檔)
+// type DailyRecordByTsFile struct {
+// 	Date       string `date`       //日期
+// 	Name       string `name`       //姓名
+// 	CardID     string `cardID`     //卡號
+// 	Time       string `time`       //時間
+// 	EmployeeID string `employeeID` //員工編號
+// 	Message    string `msg`        //進出訊息
+// }
+
+// 打卡紀錄(.ts檔) 按照ts檔順序
 type DailyRecordByTsFile struct {
-	Date       string `date`       //日期
-	Name       string `name`       //姓名
 	CardID     string `cardID`     //卡號
+	Date       string `date`       //日期
 	Time       string `time`       //時間
 	EmployeeID string `employeeID` //員工編號
+	Name       string `name`       //姓名
+	Message    string `msg`        //進出訊息
 }
 
 /** 初始化配置 */
@@ -453,9 +465,43 @@ func addDailyRecordForManyDays_TsFile(chanDailyRecordByTsFile chan<- DailyRecord
 						"值":        utf8Name[144:145],
 					}).Info("找到空白")
 
+				} else if strings.Compare("按密碼", utf8Name[58:67]) == 0 {
+					// 人名(正常進出(按密碼))(入資料庫)
+					fmt.Println("找到(按密碼):", utf8Name[15:27], utf8Name[27:37], utf8Name[37:45], utf8Name[139:144], utf8Name[58:67], utf8Name[45:68])
+
+					log_info.WithFields(logrus.Fields{
+						"fileName": fileName,
+						"trace":    "trace-000x",
+						"行號":       counter,
+						"卡號":       utf8Name[15:27],
+						"日期":       utf8Name[27:37],
+						"時間":       utf8Name[37:45],
+						"員工編號":     utf8Name[142:147],
+						"姓名":       utf8Name[147:156],
+						"進出訊息":     utf8Name[45:68],
+					}).Info("找到(按密碼):")
+
+					/**順序:
+					日期
+					姓名
+					卡號
+					時間
+					員工逼號
+					進出訊息*/
+					dailyrecordbytsfile := DailyRecordByTsFile{
+						utf8Name[15:27],
+						utf8Name[27:37],
+						utf8Name[37:45],
+						utf8Name[147:156],
+						utf8Name[147:156],
+						utf8Name[45:68]}
+
+					// 存到channel裡面
+					chanDailyRecordByTsFile <- dailyrecordbytsfile
+
 				} else {
-					// 人名(入資料庫)
-					fmt.Println("找到人名", utf8Name[15:27], utf8Name[27:37], utf8Name[37:45], utf8Name[139:144], utf8Name[144:153])
+					// 人名(正常進出 / 密碼錯誤)(入資料庫)
+					fmt.Println("找到人名", utf8Name[15:27], utf8Name[27:37], utf8Name[37:45], utf8Name[139:144], utf8Name[144:153], utf8Name[45:57])
 
 					log_info.WithFields(logrus.Fields{
 						"fileName": fileName,
@@ -466,9 +512,17 @@ func addDailyRecordForManyDays_TsFile(chanDailyRecordByTsFile chan<- DailyRecord
 						"時間":       utf8Name[37:45],
 						"員工編號":     utf8Name[139:144],
 						"姓名":       utf8Name[144:153],
+						"進出訊息":     utf8Name[45:57],
 					}).Info("找到人名")
 
-					dailyrecordbytsfile := DailyRecordByTsFile{utf8Name[15:27], utf8Name[27:37], utf8Name[37:45], utf8Name[139:144], utf8Name[144:153]}
+					//順序:日期 姓名 卡號 時間 員工逼號 進出訊息
+					dailyrecordbytsfile := DailyRecordByTsFile{
+						utf8Name[15:27],
+						utf8Name[27:37],
+						utf8Name[37:45],
+						utf8Name[139:144],
+						utf8Name[144:153],
+						utf8Name[45:57]}
 
 					// 存到channel裡面
 					chanDailyRecordByTsFile <- dailyrecordbytsfile
