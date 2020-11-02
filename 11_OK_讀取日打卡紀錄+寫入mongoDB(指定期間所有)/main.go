@@ -30,119 +30,26 @@ var worker = runtime.NumCPU()
 // 指定編碼:將繁體Big5轉成UTF-8才會正確
 var big5ToUTF8Decoder = traditionalchinese.Big5.NewDecoder()
 
-// 日打卡紀錄檔
+// 日打卡紀錄(.csv檔 有工號的)
 type DailyRecord struct {
-	Date       string "date"
-	Name       string "name"
-	CardID     string "cardID"
-	Time       string "time"
-	Message    string "message"
-	EmployeeID string "employeeID"
+	Date       string `date`
+	Name       string `name`
+	CardID     string `cardID`
+	Time       string `time`
+	EmployeeID string `employeeID`
+	//Message    string `message`
 }
 
-func main() {
-
-	/**主功能*/
-	//runtime.GOMAXPROCS(runtime.NumCPU())
-	//ImportDailyRecord()
-
-	/**測試開文字檔*/
-	readTsFile("20170626.st")
-	//readTsFile("20170630.st")
+// 打卡紀錄(.ts檔)
+type DailyRecordByTsFile struct {
+	Date       string `date`       //日期
+	Name       string `name`       //姓名
+	CardID     string `cardID`     //卡號
+	Time       string `time`       //時間
+	EmployeeID string `employeeID` //員工編號
 }
 
-func readTsFile(fileName string) {
-
-	// 讀檔
-	file, err := os.Open(fileName)
-	if err != nil {
-
-		log_err.WithFields(logrus.Fields{
-			"trace":    "trace-0005",
-			"err":      err,
-			"fileName": fileName,
-		}).Error("打開檔案失敗")
-
-		log.Fatal(err)
-	}
-	defer func() {
-		if err = file.Close(); err != nil {
-			log_err.WithFields(logrus.Fields{
-				"trace":    "trace-0006",
-				"err":      err,
-				"fileName": fileName,
-			}).Error("關閉檔案失敗")
-
-			log.Fatal(err)
-		}
-	}()
-
-	// 讀檔
-	scanner := bufio.NewScanner(file)
-
-	// 一行一行讀
-	counter := 0         // 行號
-	for scanner.Scan() { // internally, it advances token based on sperator
-
-		// 讀進一行(Big5)
-		big5Name := scanner.Text()
-		counter++
-
-		//轉成utf8(繁體)
-		utf8Name, _, _ := transform.String(big5ToUTF8Decoder, big5Name)
-
-		//fmt.Println(utf8Name[140:145]) //判斷ADMIN
-		//fmt.Println(utf8Name[140:141]) //判斷空白
-		//fmt.Println(utf8Name[144:153]) //判斷中文名
-
-		// 排除 ADMIN / 排除空白/ 才取名字
-		if strings.Compare("ADMIN", utf8Name[140:145]) == 0 {
-			fmt.Println("找到ADMIN:", utf8Name[140:145])
-
-			log_info.WithFields(logrus.Fields{
-				"fileName": fileName,
-				"trace":    "trace-0008",
-				"行號":       counter,
-				"值":        utf8Name[140:145],
-			}).Info("找到ADMIN")
-
-		} else if strings.Compare(" ", utf8Name[140:141]) == 0 {
-			fmt.Println("找到空白:", utf8Name[140:141])
-
-			log_info.WithFields(logrus.Fields{
-				"fileName": fileName,
-				"trace":    "trace-0009",
-				"行號":       counter,
-				"值":        utf8Name[140:141],
-			}).Info("找到空白")
-
-		} else {
-
-			fmt.Println("找到人名", utf8Name[15:27], utf8Name[27:37], utf8Name[37:45], utf8Name[139:144], utf8Name[144:153])
-
-			log_info.WithFields(logrus.Fields{
-				"fileName": fileName,
-				"trace":    "trace-0010",
-				"行號":       counter,
-				"卡號":       utf8Name[15:27],
-				"日期":       utf8Name[27:37],
-				"時間":       utf8Name[37:45],
-				"員工編號":     utf8Name[139:144],
-				"姓名":       utf8Name[144:153],
-			}).Info("找到人名")
-		}
-
-	}
-
-}
-
-//Log檔
-var log_info *logrus.Logger
-var log_err *logrus.Logger
-
-/*
- * 初始化配置
- */
+/** 初始化配置 */
 func init() {
 
 	fmt.Println("執行init()初始化")
@@ -212,9 +119,35 @@ func init() {
 
 // 設定檔
 type Config struct {
-	MongodbServer string
-	StartDate     string // 讀檔開始日
-	EndDate       string // 讀檔結束日
+	MongodbServerIP string //IP
+	DBName          string
+	Collection      string
+	StartDate       string // 讀檔開始日
+	EndDate         string // 讀檔結束日
+}
+
+//Log檔
+var log_info *logrus.Logger
+var log_err *logrus.Logger
+
+//檔案的開始與結束日期(轉Time格式)
+var dateStart time.Time
+var dateEnd time.Time
+
+func main() {
+
+	/**轉換逗號+有員工編號+csv檔*/
+	// countDateStartAndEnd()
+	//runtime.GOMAXPROCS(runtime.NumCPU())
+	//ImportDailyRecord()
+
+	/**轉換空白區隔+ts檔*/
+	//計算開始結束日期
+	countDateStartAndEnd()
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	//轉換開始結束日期
+	ImportDailyRecordBy_TsFile()
+
 }
 
 /*導入每日打卡資料*/
@@ -238,8 +171,36 @@ func ImportDailyRecord() {
 	fmt.Println("日打卡紀錄插入完畢")
 }
 
+/*導入每日打卡資料(.ts)*/
+func ImportDailyRecordBy_TsFile() {
+
+	// 建立 channel 存放 DailyRecord型態資料
+	chanDailyRecordByTsFile := make(chan DailyRecordByTsFile)
+
+	// 標記完成
+	dones := make(chan struct{}, worker)
+
+	// 將日打卡紀錄檔案內容讀出，並加到 chanDailyRecord 裡面
+	go addDailyRecordForManyDays_TsFile(chanDailyRecordByTsFile)
+
+	log_info.Info("抓出chanDailyRecordByTsFile: ", chanDailyRecordByTsFile)
+
+	log_info.WithFields(logrus.Fields{
+		"trace":                        "trace-00xx-.ts",
+		"len(chanDailyRecordByTsFile)": len(chanDailyRecordByTsFile),
+	}).Info("確認初始資料量")
+
+	// 將chanDailyRecord 插入mongodb資料庫
+	for i := 0; i < worker; i++ {
+		go insertDailyRecord_TsFile(chanDailyRecordByTsFile, dones)
+	}
+	//等待完成
+	awaitForCloseResult(dones)
+	fmt.Println("日打卡紀錄(.ts)插入完畢")
+}
+
 /*
- * 讀取"多日"打卡資料
+ * 讀取有逗號+員工編號的打卡資料(多日)
  * 讀取的檔案().csv 或 .txt檔案)，編碼要為UTF-8，繁體中文才能正確被讀取
  */
 func addDailyRecordForManyDays(chanDailyRecord chan<- DailyRecord) {
@@ -348,7 +309,8 @@ func addDailyRecordForManyDays(chanDailyRecord chan<- DailyRecord) {
 				"line[5]":  line[5],
 			}).Info("dailyrecord")
 
-			dailyrecord := DailyRecord{line[0], utf8Name, line[2], line[3], line[4], line[5]}
+			//dailyrecord := DailyRecord{line[0], utf8Name, line[2], line[3], line[4], line[5]}
+			dailyrecord := DailyRecord{line[0], utf8Name, line[2], line[3], line[4]} //拿掉message
 
 			// 存到channel裡面
 			chanDailyRecord <- dailyrecord
@@ -358,13 +320,295 @@ func addDailyRecordForManyDays(chanDailyRecord chan<- DailyRecord) {
 	close(chanDailyRecord) // 關閉儲存的channel
 }
 
+func addDailyRecordForManyDays_TsFile(chanDailyRecordByTsFile chan<- DailyRecordByTsFile) {
+
+	//readTsFile("20170626.st")
+	//readTsFile("20170630.st")
+
+	// 會包含dateEnd最後一天
+	for myTime := dateStart; myTime != dateEnd.AddDate(0, 0, 1); myTime = myTime.AddDate(0, 0, 1) {
+
+		// 檔名(年月日).ts
+		fileName := myTime.Format("20060102") + ".st"
+		log_info.Info("讀檔: ", fileName)
+		fmt.Println("讀檔:", fileName)
+
+		// 判斷檔案是否存在
+		_, err := os.Lstat("\\\\leapsy-nas3\\CheckInRecord\\20170605-20201011(st)\\201706\\" + fileName)
+
+		// 檔案不存在
+		if err != nil {
+			log_info.WithFields(logrus.Fields{
+				"trace":    "trace-00xx",
+				"err":      err,
+				"fileName": "\\\\leapsy-nas3\\CheckInRecord\\20170605-20201011(st)\\201706\\" + fileName,
+			}).Info("檔案不存在")
+
+		} else {
+			//檔案若存在
+
+			//file, err := os.Open("Z:\\" + fileName) 打開每日打卡紀錄檔案(本機要先登入過目的地磁碟機才能正常運作)
+			file, err := os.Open("\\\\leapsy-nas3\\CheckInRecord\\20170605-20201011(st)\\201706\\" + fileName)
+
+			log_info.WithFields(logrus.Fields{
+				"trace":    "trace-00xx",
+				"err":      err,
+				"fileName": "\\\\leapsy-nas3\\CheckInRecord\\20170605-20201011(st)\\201706\\" + fileName,
+			}).Info("打開檔案")
+
+			// 讀檔
+			if err != nil {
+
+				log_err.WithFields(logrus.Fields{
+					"trace":    "trace-0005",
+					"err":      err,
+					"fileName": fileName,
+				}).Error("打開檔案失敗")
+
+				//log.Fatal(err)
+			}
+
+			// 最後回收資源
+			defer func() {
+				if err = file.Close(); err != nil {
+					log_err.WithFields(logrus.Fields{
+						"trace":    "trace-0006",
+						"err":      err,
+						"fileName": fileName,
+					}).Error("關閉檔案失敗")
+
+					//log.Fatal(err)
+				}
+			}()
+
+			// 讀檔
+			scanner := bufio.NewScanner(file)
+
+			// 一行一行讀
+			counter := 0         // 行號
+			for scanner.Scan() { // internally, it advances token based on sperator
+
+				// 讀進一行(Big5)
+				big5Name := scanner.Text()
+				counter++
+
+				//轉成utf8(繁體)
+				utf8Name, _, _ := transform.String(big5ToUTF8Decoder, big5Name)
+
+				// fmt.Println("fileName=", fileName, "行號=", counter, "big5Name=", big5Name)
+				// log_info.Info("fileName=", fileName, "行號=", counter, "big5Name="+big5Name)
+				// log_info.Info("big5Name[140:145]=", big5Name[140:145])
+				// log_info.Info("big5Name[140:146]=", big5Name[140:146])
+				// log_info.Info("big5Name[140:147]=", big5Name[140:147])
+				// log_info.Info("big5Name[140:148]=", big5Name[140:148])
+				// log_info.Info("big5Name[140:149]=", big5Name[140:149])
+				// log_info.Info("big5Name[140:150]=", big5Name[140:150])
+
+				// fmt.Println("fileName=", fileName, "行號=", counter, "utf8Name=", utf8Name)
+				// log_info.Info("fileName=", fileName, "行號=", counter, "utf8Name="+utf8Name)
+				// log_info.Info("utf8Name[139:140]=", utf8Name[139:140])
+				// log_info.Info("utf8Name[139:141]=", utf8Name[139:141])
+				// log_info.Info("utf8Name[139:142]=", utf8Name[139:142])
+				// log_info.Info("utf8Name[139:143]=", utf8Name[139:143])
+				// log_info.Info("utf8Name[139:144]=", utf8Name[139:144])
+				// log_info.Info("utf8Name[139:145]=", utf8Name[139:145])
+				// log_info.Info("utf8Name[139:146]=", utf8Name[139:146])
+				// log_info.Info("utf8Name[139:147]=", utf8Name[139:147])
+				// log_info.Info("utf8Name[139:148]=", utf8Name[139:148])
+				// log_info.Info("utf8Name[139:149]=", utf8Name[139:149])
+				// log_info.Info("utf8Name[139:150]=", utf8Name[139:150])
+				// log_info.Info("utf8Name[139:151]=", utf8Name[139:151])
+
+				// log_info.Info("檢查點[144:145]=", utf8Name[144:145])
+				// if strings.Compare(" ", utf8Name[144:145]) == 0 {
+				// 	log_info.Info("有檢測到空白:", utf8Name[144:145])
+
+				// } else {
+				// 	log_info.Info("沒有檢查到空白:", utf8Name[144:145])
+				// }
+
+				//fmt.Println(utf8Name[140:145]) //判斷ADMIN
+				//fmt.Println(utf8Name[144:145]) //判斷空白
+				//fmt.Println(utf8Name[144:153]) //判斷中文名
+
+				// ADMIN(不入資料庫)
+				if strings.Compare("ADMIN", utf8Name[140:145]) == 0 {
+					fmt.Println("找到ADMIN:", utf8Name[140:145])
+
+					log_info.WithFields(logrus.Fields{
+						"fileName": fileName,
+						"trace":    "trace-0008",
+						"行號":       counter,
+						"值":        utf8Name[140:145],
+					}).Info("找到ADMIN")
+
+				} else if strings.Compare(" ", utf8Name[144:145]) == 0 {
+					// 空白(不入資料庫)
+					fmt.Println("找到空白:", utf8Name[144:145])
+
+					log_info.WithFields(logrus.Fields{
+						"fileName": fileName,
+						"trace":    "trace-0009",
+						"行號":       counter,
+						"值":        utf8Name[144:145],
+					}).Info("找到空白")
+
+				} else {
+					// 人名(入資料庫)
+					fmt.Println("找到人名", utf8Name[15:27], utf8Name[27:37], utf8Name[37:45], utf8Name[139:144], utf8Name[144:153])
+
+					log_info.WithFields(logrus.Fields{
+						"fileName": fileName,
+						"trace":    "trace-0010",
+						"行號":       counter,
+						"卡號":       utf8Name[15:27],
+						"日期":       utf8Name[27:37],
+						"時間":       utf8Name[37:45],
+						"員工編號":     utf8Name[139:144],
+						"姓名":       utf8Name[144:153],
+					}).Info("找到人名")
+
+					dailyrecordbytsfile := DailyRecordByTsFile{utf8Name[15:27], utf8Name[27:37], utf8Name[37:45], utf8Name[139:144], utf8Name[144:153]}
+
+					// 存到channel裡面
+					chanDailyRecordByTsFile <- dailyrecordbytsfile
+
+				}
+			}
+		}
+	}
+
+	close(chanDailyRecordByTsFile) // 關閉儲存的channel
+
+	log_info.WithFields(logrus.Fields{
+		"trace": "trace-00xx",
+	}).Info("所有檔案讀取完成，已關閉儲存的channel")
+
+}
+
+//讀取單檔 TsFile
+func readTsFiles(fileName string) {
+
+	// 讀檔
+	file, err := os.Open(fileName)
+	if err != nil {
+
+		log_err.WithFields(logrus.Fields{
+			"trace":    "trace-0005",
+			"err":      err,
+			"fileName": fileName,
+		}).Error("打開檔案失敗")
+
+		log.Fatal(err)
+	}
+	defer func() {
+		if err = file.Close(); err != nil {
+			log_err.WithFields(logrus.Fields{
+				"trace":    "trace-0006",
+				"err":      err,
+				"fileName": fileName,
+			}).Error("關閉檔案失敗")
+
+			log.Fatal(err)
+		}
+	}()
+
+	// 讀檔
+	scanner := bufio.NewScanner(file)
+
+	// 一行一行讀
+	counter := 0         // 行號
+	for scanner.Scan() { // internally, it advances token based on sperator
+
+		// 讀進一行(Big5)
+		big5Name := scanner.Text()
+		counter++
+
+		//轉成utf8(繁體)
+		utf8Name, _, _ := transform.String(big5ToUTF8Decoder, big5Name)
+
+		//fmt.Println(utf8Name[140:145]) //判斷ADMIN
+		//fmt.Println(utf8Name[140:141]) //判斷空白
+		//fmt.Println(utf8Name[144:153]) //判斷中文名
+
+		// 排除 ADMIN / 排除空白/ 才取名字
+		if strings.Compare("ADMIN", utf8Name[140:145]) == 0 {
+			fmt.Println("找到ADMIN:", utf8Name[140:145])
+
+			log_info.WithFields(logrus.Fields{
+				"fileName": fileName,
+				"trace":    "trace-0008",
+				"行號":       counter,
+				"值":        utf8Name[140:145],
+			}).Info("找到ADMIN")
+
+		} else if strings.Compare(" ", utf8Name[140:141]) == 0 {
+			fmt.Println("找到空白:", utf8Name[140:141])
+
+			log_info.WithFields(logrus.Fields{
+				"fileName": fileName,
+				"trace":    "trace-0009",
+				"行號":       counter,
+				"值":        utf8Name[140:141],
+			}).Info("找到空白")
+
+		} else {
+
+			fmt.Println("找到人名", utf8Name[15:27], utf8Name[27:37], utf8Name[37:45], utf8Name[139:144], utf8Name[144:153])
+
+			log_info.WithFields(logrus.Fields{
+				"fileName": fileName,
+				"trace":    "trace-0010",
+				"行號":       counter,
+				"卡號":       utf8Name[15:27],
+				"日期":       utf8Name[27:37],
+				"時間":       utf8Name[37:45],
+				"員工編號":     utf8Name[139:144],
+				"姓名":       utf8Name[144:153],
+			}).Info("找到人名")
+
+		}
+
+	}
+
+}
+
+/**轉換開始結束日期格式 變成time.Time格式*/
+func countDateStartAndEnd() {
+	/** 取得開始日期 **/
+	stringStartDate := config.StartDate
+
+	// 取出年月日
+	startYear, _ := strconv.Atoi(stringStartDate[0:4])
+	startMonth, _ := strconv.Atoi(stringStartDate[4:6])
+	startDay, _ := strconv.Atoi(stringStartDate[6:8])
+
+	// 轉成time格式
+	dateStart = time.Date(startYear, time.Month(startMonth), startDay, 0, 0, 0, 0, time.Local)
+	fmt.Println("檔案開始日期:", dateStart)
+	log_info.Info("檔案開始日期: ", dateStart)
+
+	/** 取得結束日期 **/
+	stringEndDate := config.EndDate
+
+	// 取出年月日
+	endYear, _ := strconv.Atoi(stringEndDate[0:4])
+	endMonth, _ := strconv.Atoi(stringEndDate[4:6])
+	endDay, _ := strconv.Atoi(stringEndDate[6:8])
+
+	// 轉成time格式
+	dateEnd = time.Date(endYear, time.Month(endMonth), endDay, 0, 0, 0, 0, time.Local)
+	fmt.Println("檔案結束日期:", dateEnd)
+	log_info.Info("檔案結束日期: ", dateEnd)
+}
+
 /*
  * 將所有日打卡紀錄，全部插入到 mongodb
  */
 func insertDailyRecord(chanDailyRecord <-chan DailyRecord, dones chan<- struct{}) {
 	//开启loop个协程
 
-	session, err := mgo.Dial(config.MongodbServer)
+	session, err := mgo.Dial(config.MongodbServerIP)
 	if err != nil {
 		fmt.Println("打卡紀錄插入錯誤(insertDailyRecord)")
 
@@ -379,10 +623,57 @@ func insertDailyRecord(chanDailyRecord <-chan DailyRecord, dones chan<- struct{}
 
 	defer session.Close()
 
-	log_info.Info("DB:leapsy_env, Collection:dailyRecord_real")
 	c := session.DB("leapsy_env").C("dailyRecord_real")
 
 	for dailyrecord := range chanDailyRecord {
+		fmt.Println("插入一筆打卡資料：", dailyrecord)
+		log_info.Info("插入一筆打卡資料:", dailyrecord)
+
+		c.Insert(&dailyrecord)
+	}
+
+	dones <- struct{}{}
+}
+
+/*
+ * 將所有日打卡紀錄，全部插入到 mongodb
+ */
+func insertDailyRecord_TsFile(chanDailyRecordByTsFile <-chan DailyRecordByTsFile, dones chan<- struct{}) {
+	//开启loop个协程
+
+	log_info.Info("開始插入MONGODB")
+
+	session, err := mgo.Dial(config.MongodbServerIP)
+	if err != nil {
+		fmt.Println("打卡紀錄插入錯誤(insertDailyRecord_TsFile)")
+
+		log_err.WithFields(logrus.Fields{
+			"trace": "trace-00xx-.ts",
+			"err":   err,
+		}).Error("打卡紀錄插入錯誤(insertDailyRecord_TsFile)")
+
+		panic(err)
+		return
+	}
+
+	defer session.Close()
+
+	c := session.DB(config.DBName).C(config.Collection)
+	log_info.Info("連上DBName:", config.DBName, "Collection", config.Collection)
+
+	//確認資料筆數
+	// ch := make(chan int, 100)
+	// for i := 0; i < 34; i++ {
+	// 	ch <- 0
+	// }
+	// fmt.Println("資料量:", len(ch))
+
+	log_info.WithFields(logrus.Fields{
+		"trace":                        "trace-00xx-.ts",
+		"len(chanDailyRecordByTsFile)": len(chanDailyRecordByTsFile),
+	}).Info("確認資料量")
+
+	for dailyrecord := range chanDailyRecordByTsFile {
 		fmt.Println("插入一筆打卡資料：", dailyrecord)
 		log_info.Info("插入一筆打卡資料:", dailyrecord)
 

@@ -1,6 +1,8 @@
 
 {
-    "MongodbServer" : "127.0.0.1",
-    "StartDate" : "20201012",
-    "EndDate" : "20201014"
+    "MongodbServerIP" : "127.0.0.1",
+    "DBName":"Leapsy_clock_in_system",
+    "Collection":"record",
+    "StartDate" : "20170607",
+    "EndDate" : "20170629"
 }
