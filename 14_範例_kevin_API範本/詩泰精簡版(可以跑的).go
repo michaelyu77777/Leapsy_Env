@@ -40,7 +40,7 @@ func dailyAPIHandler(w http.ResponseWriter, r *http.Request) {
 	mongoClientPointer, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(`mongodb://localhost:27017`)) // 連接預設主機
 
 	if nil != err {
-		fmt.Fprintf(w, "no data") // 寫入回應
+		fmt.Fprintf(w, "連接 MongoDB Server 發生問題") // 寫入回應
 		return
 	}
 
@@ -50,7 +50,7 @@ func dailyAPIHandler(w http.ResponseWriter, r *http.Request) {
 		Find(context.TODO(), bson.M{"time": bson.M{`$gt`: time.Date(2020, 1, 1, 0, 0, 0, 0, time.Local), `$lt`: time.Date(2020, 12, 1, 0, 0, 0, 0, time.Local)}}) //時間要大於某時間 並且小於某時間
 
 	if nil != err {
-		fmt.Fprintf(w, "no data") // 寫入回應
+		fmt.Fprintf(w, "連結 MongoDB.Collection 發生問題") // 寫入回應
 		return
 	}
 
@@ -63,7 +63,7 @@ func dailyAPIHandler(w http.ResponseWriter, r *http.Request) {
 		err = cursor.Decode(&data) // 解析紀錄
 
 		if nil != err {
-			fmt.Fprintf(w, "no data") // 寫入回應
+			fmt.Fprintf(w, "no data(MongoDB)") // 寫入回應
 			return
 		}
 
@@ -74,7 +74,7 @@ func dailyAPIHandler(w http.ResponseWriter, r *http.Request) {
 	jsonBytes, err := json.Marshal(results) // 轉成JSON
 
 	if nil != err {
-		fmt.Fprintf(w, "no data") // 寫入回應
+		fmt.Fprintf(w, "no data(json)") // 寫入回應
 		return
 	}
 
