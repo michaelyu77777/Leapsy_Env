@@ -345,22 +345,28 @@ func addDailyRecordForManyDays_TsFile(chanDailyRecordByTsFile chan<- DailyRecord
 		log_info.Info("讀檔: ", fileName)
 		fmt.Println("讀檔:", fileName)
 
+		// 年月資料夾路徑
+		folderNameByYearMonth := myTime.Format("200601")
+
 		// 判斷檔案是否存在
-		_, err := os.Lstat("\\\\leapsy-nas3\\CheckInRecord\\20170605-20201011(st)\\201706\\" + fileName)
+		_, err := os.Lstat("\\\\leapsy-nas3\\CheckInRecord\\20170605-20201011(st)\\" + folderNameByYearMonth + "\\" + fileName)
+		//_, err := os.Lstat("\\\\leapsy-nas3\\CheckInRecord\\20170605-20201011(st)\\201706\\" + fileName)
 
 		// 檔案不存在
 		if err != nil {
 			log_info.WithFields(logrus.Fields{
-				"trace":    "trace-00xx",
-				"err":      err,
-				"fileName": "\\\\leapsy-nas3\\CheckInRecord\\20170605-20201011(st)\\201706\\" + fileName,
+				"trace": "trace-00xx",
+				"err":   err,
+				//"fileName": "\\\\leapsy-nas3\\CheckInRecord\\20170605-20201011(st)\\201706\\" + fileName,
+				"fileName": "\\\\leapsy-nas3\\CheckInRecord\\20170605-20201011(st)\\" + folderNameByYearMonth + "\\" + fileName,
 			}).Info("檔案不存在")
 
 		} else {
 			//檔案若存在
 
 			//file, err := os.Open("Z:\\" + fileName) 打開每日打卡紀錄檔案(本機要先登入過目的地磁碟機才能正常運作)
-			file, err := os.Open("\\\\leapsy-nas3\\CheckInRecord\\20170605-20201011(st)\\201706\\" + fileName)
+			//file, err := os.Open("\\\\leapsy-nas3\\CheckInRecord\\20170605-20201011(st)\\201706\\" + fileName)
+			file, err := os.Open("\\\\leapsy-nas3\\CheckInRecord\\20170605-20201011(st)\\" + folderNameByYearMonth + "\\" + fileName)
 
 			log_info.WithFields(logrus.Fields{
 				"trace":    "trace-00xx",
