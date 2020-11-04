@@ -45,25 +45,15 @@ type Config struct {
 	EndDate         string // 讀檔結束日
 }
 
-// 日打卡紀錄(.csv檔 有工號的)
-type DailyRecord struct {
-	Date       string `date`
-	Name       string `name`
-	CardID     string `cardID`
-	Time       string `time`
-	EmployeeID string `employeeID`
-	//Message    string `msg`
-	//Message    string `message`
-}
-
 // 打卡紀錄(.ts檔) 按照ts檔順序
 type DailyRecordByTsFile struct {
-	CardID     string `cardID`     //卡號
-	Date       string `date`       //日期
-	Time       string `time`       //時間
-	EmployeeID string `employeeID` //員工編號
-	Name       string `name`       //姓名
-	Message    string `msg`        //進出訊息
+	CardID     string    `cardID`     //卡號
+	Date       string    `date`       //日期
+	Time       string    `time`       //時間
+	EmployeeID string    `employeeID` //員工編號
+	Name       string    `name`       //姓名
+	Message    string    `msg`        //進出訊息
+	DateTime   time.Time `dateTime`   //日期+時間
 }
 
 /** 初始化配置 */
@@ -287,32 +277,47 @@ func addDailyRecordForManyDays_TsFile(chanDailyRecordByTsFile chan<- DailyRecord
 
 					//名字的開始位置
 					positionOfName := 147
-					//取名字
-					name := checkNameAndReturn(utf8Line, positionOfName)
 
-					fmt.Println("整行抓取資料:", utf8Line[15:27], utf8Line[27:37], utf8Line[37:45], utf8Line[142:147], name, utf8Line[45:68])
+					//取卡號
+					cardID := utf8Line[15:27]
+					//取日期
+					date := utf8Line[27:37]
+					//取時間
+					time := utf8Line[37:45]
+					//取員工編號
+					employeeID := utf8Line[142:147]
+					//取姓名
+					name := getName(utf8Line, positionOfName)
+					//取進出訊息
+					msg := utf8Line[45:68]
+					//取dateTime
+					dateTime := getDateTime(date, time)
+
+					fmt.Println("整行抓取資料:", utf8Line[15:27], utf8Line[27:37], utf8Line[37:45], utf8Line[142:147], name, utf8Line[45:68], dateTime)
 
 					log_info.WithFields(logrus.Fields{
 						"fileName": fileName,
 						"trace":    "trace-000x",
 						"行號":       counter,
-						"卡號":       utf8Line[15:27],
-						"日期":       utf8Line[27:37],
-						"時間":       utf8Line[37:45],
-						"員工編號":     utf8Line[142:147],
+						"卡號":       cardID,
+						"日期":       date,
+						"時間":       time,
+						"員工編號":     employeeID,
 						//"姓名":       utf8Line[147:156],
 						"姓名":   name,
-						"進出訊息": utf8Line[45:68],
+						"進出訊息": msg,
+						"日期時間": dateTime,
 					}).Info("找到(按密碼):")
 
 					dailyrecordbytsfile := DailyRecordByTsFile{
-						utf8Line[15:27],
-						utf8Line[27:37],
-						utf8Line[37:45],
-						utf8Line[142:147],
+						cardID,
+						date,
+						time,
+						employeeID,
 						//utf8Line[147:156],
 						name,
-						utf8Line[45:68]}
+						msg,
+						dateTime}
 
 					// 存到channel裡面
 					chanDailyRecordByTsFile <- dailyrecordbytsfile
@@ -323,32 +328,47 @@ func addDailyRecordForManyDays_TsFile(chanDailyRecordByTsFile chan<- DailyRecord
 
 					//名字的開始位置
 					positionOfName := 144
-					//取名字
-					name := checkNameAndReturn(utf8Line, positionOfName)
 
-					fmt.Println("整行抓取資料:", utf8Line[15:27], utf8Line[27:37], utf8Line[37:45], utf8Line[139:144], name, utf8Line[45:57])
+					//取卡號
+					cardID := utf8Line[15:27]
+					//取日期
+					date := utf8Line[27:37]
+					//取時間
+					time := utf8Line[37:45]
+					//取員工編號
+					employeeID := utf8Line[139:144]
+					//取名字
+					name := getName(utf8Line, positionOfName)
+					//取進出訊息
+					msg := utf8Line[45:57]
+					//取dateTime
+					dateTime := getDateTime(date, time)
+
+					fmt.Println("整行抓取資料:", utf8Line[15:27], utf8Line[27:37], utf8Line[37:45], utf8Line[139:144], name, utf8Line[45:57], dateTime)
 
 					log_info.WithFields(logrus.Fields{
 						"fileName": fileName,
 						"trace":    "trace-0010",
 						"行號":       counter,
-						"卡號":       utf8Line[15:27],
-						"日期":       utf8Line[27:37],
-						"時間":       utf8Line[37:45],
-						"員工編號":     utf8Line[139:144],
+						"卡號":       cardID,
+						"日期":       date,
+						"時間":       time,
+						"員工編號":     employeeID,
 						//"姓名":       utf8Line[144:153],
 						"姓名":   name,
-						"進出訊息": utf8Line[45:57],
+						"進出訊息": msg,
+						"日期時間": dateTime,
 					}).Info("找到人名")
 
 					dailyrecordbytsfile := DailyRecordByTsFile{
-						utf8Line[15:27],
-						utf8Line[27:37],
-						utf8Line[37:45],
-						utf8Line[139:144],
+						cardID,
+						date,
+						time,
+						employeeID,
 						//utf8Line[144:153],
 						name,
-						utf8Line[45:57]}
+						msg,
+						dateTime}
 
 					// 存到channel裡面
 					chanDailyRecordByTsFile <- dailyrecordbytsfile
@@ -367,7 +387,7 @@ func addDailyRecordForManyDays_TsFile(chanDailyRecordByTsFile chan<- DailyRecord
 }
 
 /** 取名字 */
-func checkNameAndReturn(utf8Line string, positionOfName int) string {
+func getName(utf8Line string, positionOfName int) string {
 
 	name := ""
 	finished := false
@@ -377,15 +397,15 @@ func checkNameAndReturn(utf8Line string, positionOfName int) string {
 
 		nextOne := utf8Line[i+1 : i+2] //下一個字
 		nextTwo := utf8Line[i+2 : i+3] //下下一個字
-		fmt.Println("i=", i, "nextOne=", nextOne, "nextTwo", nextTwo)
+		// fmt.Println("i=", i, "nextOne=", nextOne, "nextTwo", nextTwo)
 
-		if strings.Compare(" ", nextOne) == 0 {
-			fmt.Print("nextOne是空白")
-		}
+		// if strings.Compare(" ", nextOne) == 0 {
+		// 	fmt.Print("nextOne是空白")
+		// }
 
-		if strings.Compare(" ", nextTwo) == 0 {
-			fmt.Print("nextTwo是空白")
-		}
+		// if strings.Compare(" ", nextTwo) == 0 {
+		// 	fmt.Print("nextTwo是空白")
+		// }
 
 		// 若下兩個都是空白 表示144~i都是name
 		if (strings.Compare(" ", nextOne) == 0) && (strings.Compare(" ", nextTwo) == 0) {
@@ -397,6 +417,56 @@ func checkNameAndReturn(utf8Line string, positionOfName int) string {
 	}
 
 	return name
+}
+
+/** 組合年 */
+func getDateTime(myDate string, myTime string) time.Time {
+
+	fmt.Println("myDate=", myDate)
+	fmt.Println("myTime=", myTime)
+
+	//2020/11/04
+	year, err := strconv.Atoi(myDate[0:4])
+	if nil != err {
+		fmt.Printf("字串轉換數字錯誤 year=", year)
+	}
+
+	month, err := strconv.Atoi(myDate[5:7])
+	if nil != err {
+		fmt.Printf("字串轉換數字錯誤 month=", month)
+	}
+
+	day, err := strconv.Atoi(myDate[8:10])
+	if nil != err {
+		fmt.Printf("字串轉換數字錯誤 day=", day)
+	}
+
+	//14:18:01
+	hr, err := strconv.Atoi(myTime[0:2])
+	if nil != err {
+		fmt.Printf("字串轉換數字錯誤 hr=", hr)
+	}
+
+	min, err := strconv.Atoi(myTime[3:5])
+	if nil != err {
+		fmt.Printf("字串轉換數字錯誤 min=", min)
+	}
+
+	sec, err := strconv.Atoi(myTime[6:8])
+	if nil != err {
+		fmt.Printf("字串轉換數字錯誤 sec=", sec)
+	}
+
+	msec, err := strconv.Atoi("0")
+	if nil != err {
+		fmt.Printf("字串轉換數字錯誤 msec=", msec)
+	}
+
+	t := time.Date(year, time.Month(month), day, hr, min, sec, msec, time.Local)
+	fmt.Printf("%+v\n", t)
+	fmt.Println("t=", t)
+	return t
+
 }
 
 /** 讀取單檔 TsFile (目前沒用到)*/
