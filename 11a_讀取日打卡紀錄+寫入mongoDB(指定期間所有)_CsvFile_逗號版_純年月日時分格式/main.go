@@ -298,18 +298,30 @@ func getDateTime(myDate string, myTime string) time.Time {
 	year, err := strconv.Atoi(myDate[0:4])
 	if nil != err {
 		fmt.Printf("字串轉換數字錯誤 year=", year)
+		log_err.WithFields(logrus.Fields{
+			"err":  err,
+			"year": year,
+		}).Error("字串轉換數字錯誤")
 	}
 	fmt.Println("year=", year)
 
 	month, err := strconv.Atoi(myDate[4:6])
 	if nil != err {
 		fmt.Printf("字串轉換數字錯誤 month=", month)
+		log_err.WithFields(logrus.Fields{
+			"err":   err,
+			"month": month,
+		}).Error("字串轉換數字錯誤")
 	}
 	fmt.Println("month=", month)
 
 	day, err := strconv.Atoi(myDate[6:8])
 	if nil != err {
 		fmt.Printf("字串轉換數字錯誤 day=", day)
+		log_err.WithFields(logrus.Fields{
+			"err": err,
+			"day": day,
+		}).Error("字串轉換數字錯誤")
 	}
 	fmt.Println("day=", day)
 
@@ -317,12 +329,20 @@ func getDateTime(myDate string, myTime string) time.Time {
 	hr, err := strconv.Atoi(myTime[0:2])
 	if nil != err {
 		fmt.Printf("字串轉換數字錯誤 hr=", hr)
+		log_err.WithFields(logrus.Fields{
+			"err": err,
+			"hr":  hr,
+		}).Error("字串轉換數字錯誤")
 	}
 	fmt.Println("hr=", hr)
 
 	min, err := strconv.Atoi(myTime[2:4])
 	if nil != err {
 		fmt.Printf("字串轉換數字錯誤 min=", min)
+		log_err.WithFields(logrus.Fields{
+			"err": err,
+			"min": min,
+		}).Error("字串轉換數字錯誤")
 	}
 	fmt.Println("min=", min)
 
@@ -343,7 +363,6 @@ func getDateTime(myDate string, myTime string) time.Time {
 	fmt.Println("year=", year, "month", month, "day", day, "hr", hr, "sec", sec, "msec", msec)
 	t := time.Date(year, time.Month(month), day, hr, min, sec, msec, time.Local)
 	fmt.Printf("%+v\n", t)
-	fmt.Println("t=", t)
 	return t
 
 }
