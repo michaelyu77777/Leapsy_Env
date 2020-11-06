@@ -51,8 +51,8 @@ type DailyRecord struct {
 	Name       string    `name`
 	CardID     string    `cardID`
 	Time       string    `time`
-	EmployeeID string    `employeeID`
 	Message    string    `msg`
+	EmployeeID string    `employeeID`
 	DateTime   time.Time `dateTime`
 }
 
@@ -252,20 +252,21 @@ func addDailyRecordForManyDays_CsvFile(chanDailyRecord chan<- DailyRecord) {
 				date := line[0]
 				cardId := line[2]
 				time := line[3]
-				employeeID := line[4]
-				msg := line[5]
+				msg := line[4]
+				employeeID := line[5]
 				dateTime := getDateTime(date, time)
 
 				// 建立每筆DailyRecord物件
 				log_info.WithFields(logrus.Fields{
-					"行號":       counter,
-					"line[0]":  date,       //date
-					"utf8Name": utf8Name,   //name
-					"line[2]":  cardId,     //cardID
-					"line[3]":  time,       //time
-					"line[4]":  msg,        //msg
-					"line[5]":  employeeID, //employeeID
-					"dateTime": dateTime,
+					"檔名":         fileName,
+					"行號":         counter,
+					"date":       date,       //date
+					"utf8Name":   utf8Name,   //name
+					"cardId":     cardId,     //cardID
+					"time":       time,       //time
+					"msg":        msg,        //msg
+					"employeeID": employeeID, //employeeID
+					"dateTime":   dateTime,
 				}).Info("dailyrecord")
 
 				dailyrecord := DailyRecord{
@@ -288,7 +289,7 @@ func addDailyRecordForManyDays_CsvFile(chanDailyRecord chan<- DailyRecord) {
 	close(chanDailyRecord) // 關閉儲存的channel
 }
 
-/** 組合年 */
+/** 組合年月+時間 */
 func getDateTime(myDate string, myTime string) time.Time {
 
 	fmt.Println("myDate=", myDate)
