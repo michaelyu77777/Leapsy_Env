@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"strconv"
 	"time"
 
 	//"labix.org/v2/mgo"
@@ -27,22 +28,23 @@ var worker = runtime.NumCPU()
 // 指定編碼:將繁體Big5轉成UTF-8才會正確
 var big5ToUTF8Decoder = traditionalchinese.Big5.NewDecoder()
 
-// 日打卡紀錄檔
-type DailyRecord struct {
-	Date       string "date"
-	Name       string "name"
-	CardID     string "cardID"
-	Time       string "time"
-	Message    string "message"
-	EmployeeID string "employeeID"
-}
-
-// 配置
+// 設定檔
 type Config struct {
-	MongodbServer             string
+	MongodbServer             string // IP
 	DBName                    string
 	CollectionName            string
-	DailyRecordFileFolderPath string
+	DailyRecordFileFolderPath string // 目錄資料夾路徑
+}
+
+// 日打卡紀錄檔
+type DailyRecord struct {
+	Date       string    "date"
+	Name       string    "name"
+	CardID     string    "cardID"
+	Time       string    "time"
+	Message    string    "msg"
+	EmployeeID string    "employeeID"
+	DateTime   time.Time `dateTime`
 }
 
 func main() {
@@ -273,12 +275,16 @@ func addDailyRecordToChannel(chanDailyRecord chan<- DailyRecord, date string) {
 	// 讀檔
 	reader := csv.NewReader(file)
 
+	//行號
+	counter := 0
+
 	// 一行一行讀進來
 	for {
 
 		line, err := reader.Read()
+		counter++
 
-		// 若讀到結束
+		// 若讀完了
 		if err == io.EOF {
 
 			close(chanDailyRecord)
@@ -288,6 +294,7 @@ func addDailyRecordToChannel(chanDailyRecord chan<- DailyRecord, date string) {
 		} else if err != nil {
 
 			close(chanDailyRecord)
+			fmt.Println("關閉channel")
 
 			log_err.WithFields(logrus.Fields{
 				"trace":    "trace-0007",
@@ -295,8 +302,8 @@ func addDailyRecordToChannel(chanDailyRecord chan<- DailyRecord, date string) {
 				"date":     date,
 				"fileName": fileName,
 			}).Error("讀取csv文件失敗")
-
 			fmt.Println("Error:", err)
+
 			break
 		}
 
@@ -305,8 +312,37 @@ func addDailyRecordToChannel(chanDailyRecord chan<- DailyRecord, date string) {
 		utf8Name, _, _ := transform.String(big5ToUTF8Decoder, big5Name) // 轉成 UTF-8
 		//fmt.Println(utf8Name) // 顯示"名字"
 
-		dailyrecord := DailyRecord{line[0], utf8Name, line[2], line[3], line[4], line[5]} // 建立每筆DailyRecord物件
-		chanDailyRecord <- dailyrecord                                                    // 存到channel裡面
+		date := line[0]
+		name := utf8Name
+		cardID := line[2]
+		time := line[3]
+		msg := line[4]
+		employeeID := line[5]
+		dateTime := getDateTime(date, time)
+
+		// 建立每筆DailyRecord物件
+		dailyrecord := DailyRecord{
+			date,
+			name,
+			cardID,
+			time,
+			msg,
+			employeeID,
+			dateTime} // 建立每筆DailyRecord物件
+
+		log_info.WithFields(logrus.Fields{
+			"檔名":         fileName,
+			"行號":         counter,
+			"date":       date,       //date
+			"name":       name,       //name
+			"cardID":     cardID,     //cardID
+			"time":       time,       //time
+			"msg":        msg,        //msg
+			"employeeID": employeeID, //employeeID
+			"dateTime":   dateTime,
+		}).Info("讀入一行紀錄:")
+
+		chanDailyRecord <- dailyrecord // 存到channel裡面
 	}
 }
 
@@ -326,7 +362,6 @@ func insertDailyRecord(chanDailyRecord <-chan DailyRecord, dones chan<- struct{}
 		}).Error("連接MongoDB失敗(插入mongodb時)")
 
 		panic(err)
-		return
 	}
 
 	defer session.Close()
@@ -334,11 +369,90 @@ func insertDailyRecord(chanDailyRecord <-chan DailyRecord, dones chan<- struct{}
 	//c := session.DB("leapsy_env").C("dailyRecord_real")
 
 	for dailyrecord := range chanDailyRecord {
-		log_info.Info("插入：", dailyrecord)
 		c.Insert(&dailyrecord)
+		log_info.Info("插入一筆資料到DB：", dailyrecord)
 	}
 
 	dones <- struct{}{}
+}
+
+/** 組合年月+時間 */
+func getDateTime(myDate string, myTime string) time.Time {
+
+	fmt.Println("myDate=", myDate)
+	fmt.Println("myTime=", myTime)
+
+	//ex:20201104
+	year, err := strconv.Atoi(myDate[0:4])
+	if nil != err {
+		fmt.Printf("字串轉換數字錯誤 year=", year)
+		log_err.WithFields(logrus.Fields{
+			"err":  err,
+			"year": year,
+		}).Error("字串轉換數字錯誤")
+	}
+	fmt.Println("year=", year)
+
+	month, err := strconv.Atoi(myDate[4:6])
+	if nil != err {
+		fmt.Printf("字串轉換數字錯誤 month=", month)
+		log_err.WithFields(logrus.Fields{
+			"err":   err,
+			"month": month,
+		}).Error("字串轉換數字錯誤")
+	}
+	fmt.Println("month=", month)
+
+	day, err := strconv.Atoi(myDate[6:8])
+	if nil != err {
+		fmt.Printf("字串轉換數字錯誤 day=", day)
+		log_err.WithFields(logrus.Fields{
+			"err": err,
+			"day": day,
+		}).Error("字串轉換數字錯誤")
+	}
+	fmt.Println("day=", day)
+
+	//ex:1418
+	hr, err := strconv.Atoi(myTime[0:2])
+	if nil != err {
+		fmt.Printf("字串轉換數字錯誤 hr=", hr)
+		log_err.WithFields(logrus.Fields{
+			"err": err,
+			"hr":  hr,
+		}).Error("字串轉換數字錯誤")
+	}
+	fmt.Println("hr=", hr)
+
+	min, err := strconv.Atoi(myTime[2:4])
+	if nil != err {
+		fmt.Printf("字串轉換數字錯誤 min=", min)
+		log_err.WithFields(logrus.Fields{
+			"err": err,
+			"min": min,
+		}).Error("字串轉換數字錯誤")
+	}
+	fmt.Println("min=", min)
+
+	//sec, err := strconv.Atoi(myTime[6:8])
+	// if nil != err {
+	// 	fmt.Printf("字串轉換數字錯誤 sec=", sec)
+	// }
+
+	sec := 0
+
+	// msec, err := strconv.Atoi("0")
+	// if nil != err {
+	// 	fmt.Printf("字串轉換數字錯誤 msec=", msec)
+	// }
+
+	msec := 0
+
+	fmt.Println("year=", year, "month", month, "day", day, "hr", hr, "sec", sec, "msec", msec)
+	t := time.Date(year, time.Month(month), day, hr, min, sec, msec, time.Local)
+	fmt.Printf("%+v\n", t)
+	return t
+
 }
 
 // 等待結束
