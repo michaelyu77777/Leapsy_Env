@@ -38,13 +38,12 @@ var dateEnd time.Time
 
 // 設定檔(欄位命名要大寫)
 type Config struct {
-	MongodbServerIP string //IP
-	DBName          string
-	Collection      string
-	StartDate       string // 讀檔開始日
-	EndDate         string // 讀檔結束日
-	FolderPath      string // 目錄資料夾路徑
-	//bitsOfEmployeeID int    //存到資料庫的員工編號要取幾位數
+	MongodbServerIP  string //IP
+	DBName           string
+	Collection       string
+	StartDate        string // 讀檔開始日
+	EndDate          string // 讀檔結束日
+	FolderPath       string // 目錄資料夾路徑
 	BitsOfEmployeeID string //存到資料庫的員工編號要取幾位數
 }
 
