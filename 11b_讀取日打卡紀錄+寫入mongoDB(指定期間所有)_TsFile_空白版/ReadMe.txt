@@ -4,7 +4,8 @@
     "Collection": "record-csv", //資料表名稱
     "StartDate" : "20201012",	//讀檔起始年月日
     "EndDate" : "20201105",	//讀檔結束年月日
-    "FolderPath":"\\\\leapsy-nas3\\CheckInRecord\\"	目錄資料夾
+    "FolderPath":"\\\\leapsy-nas3\\CheckInRecord\\",	目錄資料夾
+    "bitOfEmployeeID": 3  //存到資料庫的員工編號要取幾位數
 
 2.st檔案都在路徑"FolderPath"下,檔案要用子目錄分類，以年月來分類，一個資料夾為同一個月份的資料
 ex:資料夾201701 裡面的資料為 20170101.st ~ 20170131.st 

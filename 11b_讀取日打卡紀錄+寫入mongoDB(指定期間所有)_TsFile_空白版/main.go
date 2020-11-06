@@ -36,7 +36,7 @@ var log_err *logrus.Logger
 var dateStart time.Time
 var dateEnd time.Time
 
-// 設定檔
+// 設定檔(欄位命名要大寫)
 type Config struct {
 	MongodbServerIP string //IP
 	DBName          string
@@ -44,6 +44,8 @@ type Config struct {
 	StartDate       string // 讀檔開始日
 	EndDate         string // 讀檔結束日
 	FolderPath      string // 目錄資料夾路徑
+	//bitsOfEmployeeID int    //存到資料庫的員工編號要取幾位數
+	BitsOfEmployeeID string //存到資料庫的員工編號要取幾位數
 }
 
 // 打卡紀錄(.ts檔) 按照ts檔順序
@@ -126,11 +128,6 @@ func init() {
 }
 
 func main() {
-
-	/**轉換逗號+有員工編號+csv檔*/
-	// countDateStartAndEnd()
-	//runtime.GOMAXPROCS(runtime.NumCPU())
-	//ImportDailyRecord()
 
 	/**轉換空白區隔+ts檔*/
 	//計算開始結束日期
@@ -286,7 +283,8 @@ func addDailyRecordForManyDays_TsFile(chanDailyRecordByTsFile chan<- DailyRecord
 					//取時間
 					time := utf8Line[37:45]
 					//取員工編號
-					employeeID := utf8Line[142:147]
+					//employeeID := utf8Line[142:147]
+					employeeID := getEmployeeIDwithNbit(utf8Line[142:147], config.BitsOfEmployeeID)
 					//取姓名
 					name := getName(utf8Line, positionOfName)
 					//取進出訊息
@@ -337,7 +335,8 @@ func addDailyRecordForManyDays_TsFile(chanDailyRecordByTsFile chan<- DailyRecord
 					//取時間
 					time := utf8Line[37:45]
 					//取員工編號
-					employeeID := utf8Line[139:144]
+					//employeeID := utf8Line[139:144]
+					employeeID := getEmployeeIDwithNbit(utf8Line[139:144], config.BitsOfEmployeeID)
 					//取名字
 					name := getName(utf8Line, positionOfName)
 					//取進出訊息
@@ -468,6 +467,22 @@ func getDateTime(myDate string, myTime string) time.Time {
 	fmt.Println("t=", t)
 	return t
 
+}
+
+/** 取員工編號共n位數*/
+func getEmployeeIDwithNbit(employeeID string, n string) string {
+
+	//取string右邊n位數公式 [ length(id)-n : length(id)]
+
+	myN, err := strconv.Atoi(n)
+	if nil != err {
+		fmt.Printf("字串轉換數字錯誤 n=", n)
+	}
+
+	fmt.Println("取員工編號共n位數 employeeID=", employeeID, " n=", n)
+	result := employeeID[len(employeeID)-myN : len(employeeID)]
+	fmt.Println("取員工編號共n位數 result=", result)
+	return result
 }
 
 /** 讀取單檔 TsFile (目前沒用到)*/

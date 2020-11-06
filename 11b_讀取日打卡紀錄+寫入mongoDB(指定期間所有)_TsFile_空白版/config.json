@@ -5,5 +5,6 @@
     "Collection":"record-ts",
     "StartDate" : "20170607",
     "EndDate" : "20201011",
-    "FolderPath":"\\\\leapsy-nas3\\CheckInRecord\\20170605-20201011(st)\\"
+    "FolderPath":"\\\\leapsy-nas3\\CheckInRecord\\20170605-20201011(st)\\",
+    "BitsOfEmployeeID":"3"
 }
