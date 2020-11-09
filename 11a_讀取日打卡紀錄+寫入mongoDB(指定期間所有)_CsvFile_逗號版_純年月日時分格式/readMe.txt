@@ -3,7 +3,7 @@
     "DBName":"Leapsy_clock_in_system", //資料庫名稱
     "Collection": "record-csv", //資料表名稱
     "StartDate" : "20201012",	//讀檔起始日
-    "EndDate" : "20201105",	//讀檔結束日
+    "EndDate" : "20201106",	//讀檔結束日
     "FolderPath":"\\\\leapsy-nas3\\CheckInRecord\\"	目錄資料夾
 
 2.csv檔案都在同一個資料夾(路徑FolderPath),全部檔案不用子目錄分類

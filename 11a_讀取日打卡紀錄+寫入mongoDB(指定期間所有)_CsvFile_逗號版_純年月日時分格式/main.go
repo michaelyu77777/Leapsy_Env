@@ -292,8 +292,8 @@ func addDailyRecordForManyDays_CsvFile(chanDailyRecord chan<- DailyRecord) {
 /** 組合年月+時間 */
 func getDateTime(myDate string, myTime string) time.Time {
 
-	fmt.Println("myDate=", myDate)
-	fmt.Println("myTime=", myTime)
+	// fmt.Println("myDate=", myDate)
+	// fmt.Println("myTime=", myTime)
 
 	//ex:20201104
 	year, err := strconv.Atoi(myDate[0:4])
@@ -304,7 +304,7 @@ func getDateTime(myDate string, myTime string) time.Time {
 			"year": year,
 		}).Error("字串轉換數字錯誤")
 	}
-	fmt.Println("year=", year)
+	// fmt.Println("year=", year)
 
 	month, err := strconv.Atoi(myDate[4:6])
 	if nil != err {
@@ -314,7 +314,7 @@ func getDateTime(myDate string, myTime string) time.Time {
 			"month": month,
 		}).Error("字串轉換數字錯誤")
 	}
-	fmt.Println("month=", month)
+	// fmt.Println("month=", month)
 
 	day, err := strconv.Atoi(myDate[6:8])
 	if nil != err {
@@ -324,7 +324,7 @@ func getDateTime(myDate string, myTime string) time.Time {
 			"day": day,
 		}).Error("字串轉換數字錯誤")
 	}
-	fmt.Println("day=", day)
+	// fmt.Println("day=", day)
 
 	//ex:1418
 	hr, err := strconv.Atoi(myTime[0:2])
@@ -335,7 +335,7 @@ func getDateTime(myDate string, myTime string) time.Time {
 			"hr":  hr,
 		}).Error("字串轉換數字錯誤")
 	}
-	fmt.Println("hr=", hr)
+	// fmt.Println("hr=", hr)
 
 	min, err := strconv.Atoi(myTime[2:4])
 	if nil != err {
@@ -345,7 +345,7 @@ func getDateTime(myDate string, myTime string) time.Time {
 			"min": min,
 		}).Error("字串轉換數字錯誤")
 	}
-	fmt.Println("min=", min)
+	// fmt.Println("min=", min)
 
 	//sec, err := strconv.Atoi(myTime[6:8])
 	// if nil != err {
@@ -361,9 +361,9 @@ func getDateTime(myDate string, myTime string) time.Time {
 
 	msec := 0
 
-	fmt.Println("year=", year, "month", month, "day", day, "hr", hr, "sec", sec, "msec", msec)
+	// fmt.Println("year=", year, "month", month, "day", day, "hr", hr, "sec", sec, "msec", msec)
 	t := time.Date(year, time.Month(month), day, hr, min, sec, msec, time.Local)
-	fmt.Printf("%+v\n", t)
+	// fmt.Printf("%+v\n", t)
 	return t
 
 }
@@ -421,8 +421,8 @@ func insertDailyRecord_CsvFile(chanDailyRecord <-chan DailyRecord, dones chan<- 
 	c := session.DB(config.DBName).C(config.Collection)
 
 	for dailyrecord := range chanDailyRecord {
-		fmt.Println("插入一筆打卡資料：", dailyrecord)
-		log_info.Info("插入一筆打卡資料:", dailyrecord)
+		fmt.Println("插入一筆打卡資料：")
+		log_info.Info("插入一筆打卡資料:")
 
 		c.Insert(&dailyrecord)
 	}

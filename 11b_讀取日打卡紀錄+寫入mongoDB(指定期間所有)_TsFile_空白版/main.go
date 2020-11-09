@@ -421,8 +421,8 @@ func getName(utf8Line string, positionOfName int) string {
 /** 組合年 */
 func getDateTime(myDate string, myTime string) time.Time {
 
-	fmt.Println("myDate=", myDate)
-	fmt.Println("myTime=", myTime)
+	// fmt.Println("myDate=", myDate)
+	// fmt.Println("myTime=", myTime)
 
 	//2020/11/04
 	year, err := strconv.Atoi(myDate[0:4])
@@ -463,7 +463,6 @@ func getDateTime(myDate string, myTime string) time.Time {
 
 	t := time.Date(year, time.Month(month), day, hr, min, sec, msec, time.Local)
 	fmt.Printf("%+v\n", t)
-	fmt.Println("t=", t)
 	return t
 
 }
@@ -478,9 +477,7 @@ func getEmployeeIDwithNbit(employeeID string, n string) string {
 		fmt.Printf("字串轉換數字錯誤 n=", n)
 	}
 
-	fmt.Println("取員工編號共n位數 employeeID=", employeeID, " n=", n)
 	result := employeeID[len(employeeID)-myN : len(employeeID)]
-	fmt.Println("取員工編號共n位數 result=", result)
 	return result
 }
 
@@ -637,8 +634,8 @@ func insertDailyRecord_TsFile(chanDailyRecordByTsFile <-chan DailyRecordByTsFile
 	}).Info("確認資料量")
 
 	for dailyrecord := range chanDailyRecordByTsFile {
-		fmt.Println("插入一筆打卡資料：", dailyrecord)
-		log_info.Info("插入一筆打卡資料:", dailyrecord)
+		// fmt.Println("插入一筆打卡資料：", dailyrecord)
+		// log_info.Info("插入一筆打卡資料:", dailyrecord)
 
 		c.Insert(&dailyrecord)
 	}
