@@ -168,46 +168,72 @@ func ClockInRecordDilyAllAPIHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a := bson.M{}
+	// map:接收前端參數
+	m := bson.M{}
+
+	//若沒有輸入此變數，則map不加入搜尋欄位
+	if `` != r.FormValue("cardID") {
+		m[`cardID`] = r.FormValue("cardID")
+	}
+
+	if `` != r.FormValue("employeeID") {
+		m[`employeeID`] = r.FormValue("employeeID")
+	}
 
 	if `` != r.FormValue("name") {
-		a[`name`] = r.FormValue("name")
+		m[`name`] = r.FormValue("name")
 	}
 
-	if `` != r.FormValue("date") {
-		a[`date`] = r.FormValue("date")
+	if `` != r.FormValue("msg") {
+		m[`msg`] = r.FormValue("msg")
 	}
 
+	//dateTime
 	if `` != r.FormValue("dateTime") {
+
+		// 輸入String格式為 2006-01-02T15:04:05+08:00 轉成time.Time (前端可自行指定時區)
 		dateTime, err := time.Parse(time.RFC3339, r.FormValue("dateTime"))
-		fmt.Println(err)
-		fmt.Println(dateTime)
-		a[`dateTime`] = dateTime
+
+		//處理格式錯誤
+		if nil != err {
+
+			fmt.Println(err)
+			log_err.WithFields(logrus.Fields{
+				"輸入dateTime值": r.FormValue("dateTime"),
+				"err":         err,
+			}).Error("輸入日期格式:轉換錯誤")
+
+			//date= 0001-01-01 00:00:00 +0000 UTC
+			fmt.Println("輸入日期格式錯誤:date=", dateTime)
+		}
+
+		m[`dateTime`] = dateTime
 	}
 
-	//query
+	// 查詢
 	cursor, err := mongoClientPointer.
 		Database(config.DBName).
 		Collection(config.Collection).
 		//Find(context.TODO(), bson.M{"dateTime": bson.M{`$lt`: time.Date(2017, 1, 1, 0, 0, 0, 0, time.Local)}}) //時間要大於某時間 並且小於某時間
 		//Find(context.TODO(), bson.M{"time": bson.M{`$gt`: time.Date(2020, 1, 1, 0, 0, 0, 0, time.Local), `$lt`: time.Date(2020, 12, 1, 0, 0, 0, 0, time.Local)}}) //時間要大於某時間 並且小於某時間
-		Find(context.TODO(), a) /*bson.M{
-			`name`: r.FormValue("name"),
-			`date`: r.FormValue("date"),
-			//`dateTime`: r.FormValue("dateTime"),
-		}*/ //時間要大於某時間 並且小於某時間
+		Find(context.TODO(), m)
 
-	fmt.Println("r.FormValue(name) = ", r.FormValue("name"))
-
+	// 查詢錯誤 return
 	if nil != err {
-		fmt.Fprintf(w, "連 MongoDB.Collection 錯誤") // 寫入回應
+		fmt.Fprintf(w, "查詢出錯", err, ",w=", w)
+		if nil != err {
+			log_err.WithFields(logrus.Fields{
+				"err": err,
+			}).Error("查詢出錯")
+			fmt.Println("查詢出錯", err)
+		}
 		return
 	}
 
 	// 所有 record 結果
 	var results []Record
 
-	// 一筆筆拿出來
+	// 一筆筆拿出結果
 	for cursor.Next(context.TODO()) { // 針對每一紀錄
 
 		// 單筆 record
@@ -216,6 +242,7 @@ func ClockInRecordDilyAllAPIHandler(w http.ResponseWriter, r *http.Request) {
 		// decode
 		err = cursor.Decode(&record)
 
+		// 錯誤處理
 		if nil != err {
 			//fmt.Printf("解析Record錯誤", err, ",w=", w) // 寫入回應
 			fmt.Fprintf(w, "w", err, "cursor.Decode發生錯誤")
@@ -228,10 +255,11 @@ func ClockInRecordDilyAllAPIHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// 查詢結果:dateTime時區 轉成Local時區
 		record.DateTime = record.DateTime.Local()
-		fmt.Println(record.DateTime)
+		// fmt.Println(record.DateTime)
 
-		// decode 無法檢查的部分
+		// decode 無法檢查到的部分
 		// 檢查dateTime年(應該介於 0~9999之間)
 		// 針對負年而做的檢查　dateTime:-0001-11-29T16:00:00.000+00:00
 		if record.DateTime.Year() > 0 && record.DateTime.Year() < 9999 {
