@@ -168,13 +168,36 @@ func ClockInRecordDilyAllAPIHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	a := bson.M{}
+
+	if `` != r.FormValue("name") {
+		a[`name`] = r.FormValue("name")
+	}
+
+	if `` != r.FormValue("date") {
+		a[`date`] = r.FormValue("date")
+	}
+
+	if `` != r.FormValue("dateTime") {
+		dateTime, err := time.Parse(time.RFC3339, r.FormValue("dateTime"))
+		fmt.Println(err)
+		fmt.Println(dateTime)
+		a[`dateTime`] = dateTime
+	}
+
 	//query
 	cursor, err := mongoClientPointer.
 		Database(config.DBName).
 		Collection(config.Collection).
 		//Find(context.TODO(), bson.M{"dateTime": bson.M{`$lt`: time.Date(2017, 1, 1, 0, 0, 0, 0, time.Local)}}) //時間要大於某時間 並且小於某時間
 		//Find(context.TODO(), bson.M{"time": bson.M{`$gt`: time.Date(2020, 1, 1, 0, 0, 0, 0, time.Local), `$lt`: time.Date(2020, 12, 1, 0, 0, 0, 0, time.Local)}}) //時間要大於某時間 並且小於某時間
-		Find(context.TODO(), bson.M{}) //時間要大於某時間 並且小於某時間
+		Find(context.TODO(), a) /*bson.M{
+			`name`: r.FormValue("name"),
+			`date`: r.FormValue("date"),
+			//`dateTime`: r.FormValue("dateTime"),
+		}*/ //時間要大於某時間 並且小於某時間
+
+	fmt.Println("r.FormValue(name) = ", r.FormValue("name"))
 
 	if nil != err {
 		fmt.Fprintf(w, "連 MongoDB.Collection 錯誤") // 寫入回應
@@ -204,6 +227,9 @@ func ClockInRecordDilyAllAPIHandler(w http.ResponseWriter, r *http.Request) {
 
 			return
 		}
+
+		record.DateTime = record.DateTime.Local()
+		fmt.Println(record.DateTime)
 
 		// decode 無法檢查的部分
 		// 檢查dateTime年(應該介於 0~9999之間)
