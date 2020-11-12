@@ -2,6 +2,6 @@
 {
     "MongodbServer":"127.0.0.1",
     "DBName":"Leapsy_clock_in_system",
-    "CollectionName":"record",
+    "CollectionName":"records",
     "DailyRecordFileFolderPath":"\\\\leapsy-nas3\\CheckInRecord\\"
 }

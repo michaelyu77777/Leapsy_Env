@@ -123,7 +123,9 @@ func init() {
 	/**讀設定檔(config.json)*/
 	//file, _ := os.Open("config.json")
 	log_info.Info("打開config設定檔")
-	file, err := os.Open("D:\\workspace-GO\\Leapsy_Env\\10_OK_讀取日打卡紀錄+寫入mongoDB(當日檔案)\\config.json")
+	file, err := os.Open("config.json") //取相對路徑
+	//file, err := os.Open("D:\\workspace-GO\\Leapsy_Env\\10_OK_讀取日打卡紀錄+寫入mongoDB(當日檔案)\\config.json")
+
 	buf := make([]byte, 2048)
 	if err != nil {
 		log_err.WithFields(logrus.Fields{
@@ -223,6 +225,13 @@ func deleteDailyRecordToday(date string) {
 	defer session.Close()
 	c := session.DB(config.DBName).C(config.CollectionName)
 	//c := session.DB("leapsy_env").C("dailyRecord_real")
+
+	log_info.WithFields(logrus.Fields{
+		"MongodbServer":             config.MongodbServer,
+		"DBName":                    config.DBName,
+		"CollectionName":            config.CollectionName,            //date
+		"DailyRecordFileFolderPath": config.DailyRecordFileFolderPath, //name
+	}).Info("設定檔:")
 
 	log_info.Info("移除當日所有舊紀錄,日期為 date: ", date)
 	info, err := c.RemoveAll(bson.M{"date": date}) //移除今天所有舊的紀錄(格式年月日)
@@ -366,6 +375,14 @@ func insertDailyRecord(chanDailyRecord <-chan DailyRecord, dones chan<- struct{}
 
 	defer session.Close()
 	c := session.DB(config.DBName).C(config.CollectionName)
+
+	log_info.WithFields(logrus.Fields{
+		"MongodbServer":             config.MongodbServer,
+		"DBName":                    config.DBName,
+		"CollectionName":            config.CollectionName,            //date
+		"DailyRecordFileFolderPath": config.DailyRecordFileFolderPath, //name
+	}).Info("設定檔:")
+
 	//c := session.DB("leapsy_env").C("dailyRecord_real")
 
 	for dailyrecord := range chanDailyRecord {
