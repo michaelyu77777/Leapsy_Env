@@ -16,6 +16,7 @@ import (
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 
 	"golang.org/x/text/encoding/traditionalchinese" // 繁體中文編碼
 	"golang.org/x/text/transform"
@@ -118,8 +119,7 @@ func init() {
 		panic(err)
 
 		log_err.WithFields(logrus.Fields{
-			"trace": "trace-0001",
-			"err":   err,
+			"err": err,
 		}).Error("將設定讀到config變數中失敗")
 
 		fmt.Println(err)
@@ -134,6 +134,8 @@ func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	//轉換開始結束日期
 	ImportDailyRecordBy_TsFile()
+	//刪除多餘的Record
+	deleteEmptyAndRedundantRecord()
 
 }
 
@@ -152,7 +154,6 @@ func ImportDailyRecordBy_TsFile() {
 	log_info.Info("抓出chanDailyRecordByTsFile: ", chanDailyRecordByTsFile)
 
 	log_info.WithFields(logrus.Fields{
-		"trace":                        "trace-00xx-.ts",
 		"len(chanDailyRecordByTsFile)": len(chanDailyRecordByTsFile),
 	}).Info("確認初始資料量")
 
@@ -188,8 +189,7 @@ func addDailyRecordForManyDays_TsFile(chanDailyRecordByTsFile chan<- DailyRecord
 		// 檔案不存在
 		if err != nil {
 			log_info.WithFields(logrus.Fields{
-				"trace": "trace-00xx",
-				"err":   err,
+				"err": err,
 				//"fileName": "\\\\leapsy-nas3\\CheckInRecord\\20170605-20201011(st)\\201706\\" + fileName,
 				"fileName": config.FolderPath + folderNameByYearMonth + "\\" + fileName,
 			}).Info("檔案不存在")
@@ -202,7 +202,6 @@ func addDailyRecordForManyDays_TsFile(chanDailyRecordByTsFile chan<- DailyRecord
 			file, err := os.Open(config.FolderPath + folderNameByYearMonth + "\\" + fileName)
 
 			log_info.WithFields(logrus.Fields{
-				"trace":    "trace-00xx",
 				"err":      err,
 				"fileName": "\\\\leapsy-nas3\\CheckInRecord\\20170605-20201011(st)\\201706\\" + fileName,
 			}).Info("打開檔案")
@@ -211,7 +210,6 @@ func addDailyRecordForManyDays_TsFile(chanDailyRecordByTsFile chan<- DailyRecord
 			if err != nil {
 
 				log_err.WithFields(logrus.Fields{
-					"trace":    "trace-0005",
 					"err":      err,
 					"fileName": fileName,
 				}).Error("打開檔案失敗")
@@ -223,7 +221,6 @@ func addDailyRecordForManyDays_TsFile(chanDailyRecordByTsFile chan<- DailyRecord
 			defer func() {
 				if err = file.Close(); err != nil {
 					log_err.WithFields(logrus.Fields{
-						"trace":    "trace-0006",
 						"err":      err,
 						"fileName": fileName,
 					}).Error("關閉檔案失敗")
@@ -252,7 +249,6 @@ func addDailyRecordForManyDays_TsFile(chanDailyRecordByTsFile chan<- DailyRecord
 
 					log_info.WithFields(logrus.Fields{
 						"fileName": fileName,
-						"trace":    "trace-0008",
 						"行號":       counter,
 						"值":        utf8Line[140:145],
 					}).Info("找到ADMIN")
@@ -263,7 +259,6 @@ func addDailyRecordForManyDays_TsFile(chanDailyRecordByTsFile chan<- DailyRecord
 
 					log_info.WithFields(logrus.Fields{
 						"fileName": fileName,
-						"trace":    "trace-0009",
 						"行號":       counter,
 						"值":        utf8Line[144:145],
 					}).Info("找到空白")
@@ -295,7 +290,6 @@ func addDailyRecordForManyDays_TsFile(chanDailyRecordByTsFile chan<- DailyRecord
 
 					log_info.WithFields(logrus.Fields{
 						"fileName": fileName,
-						"trace":    "trace-000x",
 						"行號":       counter,
 						"卡號":       cardID,
 						"日期":       date,
@@ -347,7 +341,6 @@ func addDailyRecordForManyDays_TsFile(chanDailyRecordByTsFile chan<- DailyRecord
 
 					log_info.WithFields(logrus.Fields{
 						"fileName": fileName,
-						"trace":    "trace-0010",
 						"行號":       counter,
 						"卡號":       cardID,
 						"日期":       date,
@@ -379,9 +372,7 @@ func addDailyRecordForManyDays_TsFile(chanDailyRecordByTsFile chan<- DailyRecord
 
 	close(chanDailyRecordByTsFile) // 關閉儲存的channel
 
-	log_info.WithFields(logrus.Fields{
-		"trace": "trace-00xx",
-	}).Info("所有檔案讀取完成，已關閉儲存的channel")
+	log_info.WithFields(logrus.Fields{}).Info("所有檔案讀取完成，已關閉儲存的channel")
 
 }
 
@@ -489,7 +480,6 @@ func readFile_Ts(fileName string) {
 	if err != nil {
 
 		log_err.WithFields(logrus.Fields{
-			"trace":    "trace-0005",
 			"err":      err,
 			"fileName": fileName,
 		}).Error("打開檔案失敗")
@@ -499,7 +489,6 @@ func readFile_Ts(fileName string) {
 	defer func() {
 		if err = file.Close(); err != nil {
 			log_err.WithFields(logrus.Fields{
-				"trace":    "trace-0006",
 				"err":      err,
 				"fileName": fileName,
 			}).Error("關閉檔案失敗")
@@ -532,7 +521,6 @@ func readFile_Ts(fileName string) {
 
 			log_info.WithFields(logrus.Fields{
 				"fileName": fileName,
-				"trace":    "trace-0008",
 				"行號":       counter,
 				"值":        utf8Line[140:145],
 			}).Info("找到ADMIN")
@@ -542,7 +530,6 @@ func readFile_Ts(fileName string) {
 
 			log_info.WithFields(logrus.Fields{
 				"fileName": fileName,
-				"trace":    "trace-0009",
 				"行號":       counter,
 				"值":        utf8Line[140:141],
 			}).Info("找到空白")
@@ -553,7 +540,6 @@ func readFile_Ts(fileName string) {
 
 			log_info.WithFields(logrus.Fields{
 				"fileName": fileName,
-				"trace":    "trace-0010",
 				"行號":       counter,
 				"卡號":       utf8Line[15:27],
 				"日期":       utf8Line[27:37],
@@ -605,15 +591,13 @@ func insertDailyRecord_TsFile(chanDailyRecordByTsFile <-chan DailyRecordByTsFile
 
 	session, err := mgo.Dial(config.MongodbServerIP)
 	if err != nil {
-		fmt.Println("打卡紀錄插入錯誤(insertDailyRecord_TsFile)")
+		fmt.Println("打卡紀錄插入錯誤(連上DB錯誤)")
 
 		log_err.WithFields(logrus.Fields{
-			"trace": "trace-00xx-.ts",
-			"err":   err,
-		}).Error("打卡紀錄插入錯誤(insertDailyRecord_TsFile)")
+			"err": err,
+		}).Error("打卡紀錄插入錯誤(連上DB錯誤)")
 
 		panic(err)
-		return
 	}
 
 	defer session.Close()
@@ -629,7 +613,6 @@ func insertDailyRecord_TsFile(chanDailyRecordByTsFile <-chan DailyRecordByTsFile
 	// fmt.Println("資料量:", len(ch))
 
 	log_info.WithFields(logrus.Fields{
-		"trace":                        "trace-00xx-.ts",
 		"len(chanDailyRecordByTsFile)": len(chanDailyRecordByTsFile),
 	}).Info("確認資料量")
 
@@ -641,6 +624,45 @@ func insertDailyRecord_TsFile(chanDailyRecordByTsFile <-chan DailyRecordByTsFile
 	}
 
 	dones <- struct{}{}
+}
+
+func deleteEmptyAndRedundantRecord() {
+
+	log_info.Info("開始刪除多餘紀錄")
+
+	session, err := mgo.Dial(config.MongodbServerIP)
+	if err != nil {
+		fmt.Println("連上DB錯誤")
+
+		log_err.WithFields(logrus.Fields{
+			"err": err,
+		}).Error("連上DB錯誤")
+
+		//自己與caller皆中斷
+		panic(err)
+	}
+
+	defer session.Close()
+
+	// Get collection
+	c := session.DB(config.DBName).C(config.Collection)
+	log_info.Info("連上DBName:", config.DBName, "Collection", config.Collection)
+
+	// Delete record(不合理的時間與code)
+	err = c.Remove(
+		bson.M{
+			"dateTime": bson.M{
+				"$lt": time.Date(0001, 1, 1, 0, 0, 0, 0, time.UTC)}})
+
+	if err != nil {
+		fmt.Printf("remove fail %v\n", err)
+
+		log_err.WithFields(logrus.Fields{
+			"err": err,
+		}).Error("刪除Record錯誤")
+		//自己與caller皆中斷
+		panic(err)
+	}
 }
 
 // 等待結束
