@@ -1,9 +1,0 @@
-
-{
-    "ServerIP":"192.168.1.190",
-    "ServerPort":"6001",
-    "MongodbServerIP" : "127.0.0.1",
-    "MongodbServerPort" : "27017",
-    "DBName":"Leapsy_clock_in_system",
-    "Collection":"record"
-}
