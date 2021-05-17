@@ -277,61 +277,61 @@ func imoprtFackDatas() {
 
 		// 插入上班打卡時間:時分秒（隨機）避開病假事假
 		if instance1.LeaveType != "病" && instance1.LeaveType != "事" {
-			instance1.CheckInTime = "08:" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10))
+			instance1.CheckInTime = "08:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
 			record1 = append(record1, instance1) // 插入上班假資料
 		}
 		if instance2.LeaveType != "病" && instance2.LeaveType != "事" {
-			instance2.CheckInTime = "08:" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10))
+			instance2.CheckInTime = "08:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
 			record2 = append(record2, instance2)
 		}
 		if instance3.LeaveType != "病" && instance3.LeaveType != "事" {
-			instance3.CheckInTime = "08:" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10))
+			instance3.CheckInTime = "08:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
 			record3 = append(record3, instance3)
 		}
 		if instance4.LeaveType != "病" && instance4.LeaveType != "事" {
-			instance4.CheckInTime = "08:" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10))
+			instance4.CheckInTime = "08:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
 			record4 = append(record4, instance4)
 		}
 		if instance5.LeaveType != "病" && instance5.LeaveType != "事" {
-			instance5.CheckInTime = "08:" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10))
+			instance5.CheckInTime = "08:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
 			record5 = append(record5, instance5)
 		}
 		if instance6.LeaveType != "病" && instance6.LeaveType != "事" {
-			instance6.CheckInTime = "08:" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10))
+			instance6.CheckInTime = "08:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
 			record6 = append(record6, instance6)
 		}
 		if instance7.LeaveType != "病" && instance7.LeaveType != "事" {
-			instance7.CheckInTime = "08:" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10))
+			instance7.CheckInTime = "08:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
 			record7 = append(record7, instance7)
 		}
 
 		// 插入下班打卡時間:時分秒（隨機）
 		if instance1.LeaveType != "病" && instance1.LeaveType != "事" {
-			instance1.CheckInTime = "18:" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10))
+			instance1.CheckInTime = "18:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
 			record1 = append(record1, instance1) // 插入下班假資料
 		}
 		if instance2.LeaveType != "病" && instance2.LeaveType != "事" {
-			instance2.CheckInTime = "18:" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10))
+			instance2.CheckInTime = "18:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
 			record2 = append(record2, instance2)
 		}
 		if instance3.LeaveType != "病" && instance3.LeaveType != "事" {
-			instance3.CheckInTime = "18:" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10))
+			instance3.CheckInTime = "18:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
 			record3 = append(record3, instance3)
 		}
 		if instance4.LeaveType != "病" && instance4.LeaveType != "事" {
-			instance4.CheckInTime = "18:" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10))
+			instance4.CheckInTime = "18:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
 			record4 = append(record4, instance4)
 		}
 		if instance5.LeaveType != "病" && instance5.LeaveType != "事" {
-			instance5.CheckInTime = "18:" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10))
+			instance5.CheckInTime = "18:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
 			record5 = append(record5, instance5)
 		}
 		if instance6.LeaveType != "病" && instance6.LeaveType != "事" {
-			instance6.CheckInTime = "18:" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10))
+			instance6.CheckInTime = "18:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
 			record6 = append(record6, instance6)
 		}
 		if instance7.LeaveType != "病" && instance7.LeaveType != "事" {
-			instance7.CheckInTime = "18:" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(10)) + strconv.Itoa(rand.Intn(10))
+			instance7.CheckInTime = "18:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
 			record7 = append(record7, instance7)
 		}
 
