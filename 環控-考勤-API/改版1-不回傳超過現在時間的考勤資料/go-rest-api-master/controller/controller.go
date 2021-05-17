@@ -93,10 +93,18 @@ func getCheckInRecord(c *fiber.Ctx) {
 
 	cur.All(context.Background(), &results)
 
+	for i, e := range results {
+
+		fmt.Printf("所有結果：Result[%d]=%s\n", i, e["checkintime"]) //results[0]["checkintime"]
+	}
+
+	//最後正確結果
+	correctResult := []primitive.M{}
+
 	//進行晚時間的過濾
 	for i, e := range results {
 
-		fmt.Printf("一截獲：Result[%d]=%+v \n", i, e["checkintime"]) //results[0]["checkintime"]
+		fmt.Printf("巡迴結果：Result[%d]=%+v \n", i, e["checkintime"]) //results[0]["checkintime"]
 
 		strTime := fmt.Sprintf("%v", e["checkintime"]) // 轉成string
 		strDate := fmt.Sprintf("%v", e["date"])        // 轉成string
@@ -107,27 +115,34 @@ func getCheckInRecord(c *fiber.Ctx) {
 		// 	results = remove(results, i) //remove results[i]
 		// }
 
-		// 若有打卡時間，且有未來的時間
-		if strTime != "" && isFutureTime(strDate, strTime) {
-			// 打卡時間若比現在時間晚，則過濾掉
-			fmt.Printf("i=%d 找到時間晚的strDate＝%s,strTime=%s,進行移除。e=%+s", i, strDate, strTime, e)
-			results = remove(results, i) //remove results[i]
+		// // 若有打卡時間，且是未來的時間
+		// if strTime != "" && isFutureTime(strDate, strTime) {
+		// 	// 錯誤結果:打卡時間若比現在時間晚，則過濾掉
+		// 	fmt.Printf("進行移除:[i]=%d 找到未來時間strDate＝%s,strTime=%s,。", i, strDate, strTime)
+		// 	results = remove(results, i) //remove results[i]
+		// }
+
+		// 加入正確結果:沒請假+是現在時間
+		if strTime != "" && !isFutureTime(strDate, strTime) {
+			// 正確結果:就加入另外一個
+			correctResult = append(correctResult, results[i])
 		}
 	}
 
-	for i, e := range results {
+	for i, e := range correctResult {
+		fmt.Printf("最後結果")
 		if e != nil {
-			fmt.Printf("最後結果：Result[%d]=%+v \n", i, e["checkintime"]) //results[0]["checkintime"]
+			fmt.Printf("最後結果：Result[%d]=%+v \n", i, correctResult[i]) //results[0]["checkintime"]
 		}
 	}
 
 	// 若查無資料
-	if results == nil {
+	if correctResult == nil {
 		c.SendStatus(404)
 		return
 	}
 
-	json, _ := json.Marshal(results)
+	json, _ := json.Marshal(correctResult)
 	c.Send(json)
 }
 
