@@ -109,22 +109,12 @@ func getCheckInRecord(c *fiber.Ctx) {
 		strTime := fmt.Sprintf("%v", e["checkintime"]) // 轉成string
 		strDate := fmt.Sprintf("%v", e["date"])        // 轉成string
 
-		//若沒有打卡時間，直接通過，不做處理。
-		// if strTime == "" {
-		// 	fmt.Println("找到打卡時間空，通過")
-		// 	results = remove(results, i) //remove results[i]
-		// }
-
-		// // 若有打卡時間，且是未來的時間
-		// if strTime != "" && isFutureTime(strDate, strTime) {
-		// 	// 錯誤結果:打卡時間若比現在時間晚，則過濾掉
-		// 	fmt.Printf("進行移除:[i]=%d 找到未來時間strDate＝%s,strTime=%s,。", i, strDate, strTime)
-		// 	results = remove(results, i) //remove results[i]
-		// }
-
 		// 加入正確結果:沒請假+是現在時間
 		if strTime != "" && !isFutureTime(strDate, strTime) {
 			// 正確結果:就加入另外一個
+			correctResult = append(correctResult, results[i])
+		} else if strTime == "" {
+			// 若有病假+事假也要加入前端自己判斷數量
 			correctResult = append(correctResult, results[i])
 		}
 	}
