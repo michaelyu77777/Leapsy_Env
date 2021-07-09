@@ -78,3 +78,5 @@
 10_read_daily_clock_in_record_into_mongodb/Log_10_read_daily_clock_in_record_into_mongodb/log/info/info
 10_read_daily_clock_in_record_into_mongodb/Log_10_read_daily_clock_in_record_into_mongodb/log/info/info
 10_read_daily_clock_in_record_into_mongodb/Log_10_read_daily_clock_in_record_into_mongodb/log/info/info
+環控-考勤-API/改版1-不回傳超過現在時間的考勤資料/go-rest-api-master/執行檔old/api_checkInRecord_checkInStatiscs.exe
+環控-考勤-匯入出勤假資料/backup20201104-包含csv+st版本.zip

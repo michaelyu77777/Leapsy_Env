@@ -1,9 +1,0 @@
-{"level":"info","msg":"結束Error等級設定","time":"2021-05-14T17:12:59+08:00"}
-{"level":"info","msg":"檔案開始日期: 2021-01-01 00:00:00 +0800 CST","time":"2021-05-14T17:12:59+08:00"}
-{"level":"info","msg":"檔案結束日期: 2021-06-30 00:00:00 +0800 CST","time":"2021-05-14T17:12:59+08:00"}
-{"level":"info","msg":"連接MongoDB","time":"2021-05-14T17:12:59+08:00"}
-{"CollectionName":"check_in_record","DBName":"leapsy_env","MongodbServer":"127.0.0.1","level":"info","msg":"設定檔:","time":"2021-05-14T17:12:59+08:00"}
-{"level":"info","msg":"移除當日所有舊紀錄","time":"2021-05-14T17:12:59+08:00"}
-{"level":"info","msg":"發生改變的info: \u0026{0 0 0 \u003cnil\u003e}","time":"2021-05-14T17:12:59+08:00"}
-{"level":"info","msg":"開始插入資料到MongoDB","time":"2021-05-14T17:12:59+08:00"}
-{"level":"info","msg":"所有檔案讀取完成，已關閉儲存的channel","time":"2021-05-14T17:13:00+08:00"}
