@@ -140,7 +140,7 @@ func getCheckInRecord(c *fiber.Ctx) {
 func isFutureTime(date string, checkintime string) bool {
 
 	//現在時間
-	t := time.Now()
+	t := time.Now().In(time.FixedZone("", 8*60*60))
 	fmt.Println("現在時間=", t)
 
 	//拆解打卡年月日
