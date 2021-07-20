@@ -45,15 +45,15 @@ type Config struct {
 }
 
 // 打卡紀錄(.ts檔) 按照ts檔順序
-type DailyRecordByTsFile struct {
-	CardID     string    `cardID`     //卡號
-	Date       string    `date`       //日期
-	Time       string    `time`       //時間
-	EmployeeID string    `employeeID` //員工編號
-	Name       string    `name`       //姓名
-	Message    string    `msg`        //進出訊息
-	DateTime   time.Time `dateTime`   //日期+時間
-}
+// type DailyRecordByTsFile struct {
+// 	CardID     string    `cardID`     //卡號
+// 	Date       string    `date`       //日期
+// 	Time       string    `time`       //時間
+// 	EmployeeID string    `employeeID` //員工編號
+// 	Name       string    `name`       //姓名
+// 	Message    string    `msg`        //進出訊息
+// 	DateTime   time.Time `dateTime`   //日期+時間
+// }
 
 /** 初始化配置 */
 func init() {
@@ -188,14 +188,16 @@ func processImportRecords() {
 }
 
 type CheckInRecord struct {
-	Id          int    `json:"id"`            //ID
-	Name        string `json:"name"`          //中文姓名
-	CheckInTime string `json:"check_in_time"` //打卡時:分:秒
-	Pic         string `json:"pic"`           //頭像
-	LeaveType   string `json:"leave_type"`    //無、病、假
-	Date        string `json:"date"`          //打卡日
-	Department  string `json:"department"`    //部門
-	Position    string `json:"position"`      //職位
+	Id              int       `json:"id"`              //ID
+	Name            string    `json:"name"`            //中文姓名
+	CheckInTime     string    `json:"check_in_time"`   //打卡時:分:秒
+	Pic             string    `json:"pic"`             //頭像
+	LeaveType       string    `json:"leave_type"`      //無、病、假
+	Date            string    `json:"date"`            //打卡日
+	Department      string    `json:"department"`      //部門
+	Position        string    `json:"position"`        //職位
+	DateTimeToday   time.Time `json:"dateTimeToday"`   //當日時間(time.Time)
+	DateTimeCheckIn time.Time `json:"dateTimeCheckIn"` //打卡時間(time.Time)
 }
 
 // 頭像
@@ -237,13 +239,13 @@ var instance7 CheckInRecord
 func imoprtFackDatas() {
 
 	// 基礎模型
-	model1 := CheckInRecord{1, "雷俊憲", "", pic1, "", "", "軟體", "雲端工程師"}
-	model2 := CheckInRecord{2, "陳姿均", "", pic1, "", "", "軟體", "軟體工程師"}
-	model3 := CheckInRecord{3, "王貞儀", "", pic1, "", "", "軟體", "前端工程師"}
-	model4 := CheckInRecord{4, "翁佑霖", "", pic1, "", "", "軟體", "後端工程師"}
-	model5 := CheckInRecord{5, "陳詩雅", "", pic1, "", "", "視覺設計", "視覺設計師"}
-	model6 := CheckInRecord{6, "張淑玲", "", pic1, "", "", "視覺設計", "視覺設計師"}
-	model7 := CheckInRecord{7, "賴瑩一", "", pic1, "", "", "視覺設計", "視覺設計師"}
+	model1 := CheckInRecord{1, "雷俊憲", "", pic1, "", "", "軟體", "雲端工程師", time.Time{}, time.Time{}}
+	model2 := CheckInRecord{2, "陳姿均", "", pic1, "", "", "軟體", "軟體工程師", time.Time{}, time.Time{}}
+	model3 := CheckInRecord{3, "王貞儀", "", pic1, "", "", "軟體", "前端工程師", time.Time{}, time.Time{}}
+	model4 := CheckInRecord{4, "翁佑霖", "", pic1, "", "", "軟體", "後端工程師", time.Time{}, time.Time{}}
+	model5 := CheckInRecord{5, "陳詩雅", "", pic1, "", "", "視覺設計", "視覺設計師", time.Time{}, time.Time{}}
+	model6 := CheckInRecord{6, "張淑玲", "", pic1, "", "", "視覺設計", "視覺設計師", time.Time{}, time.Time{}}
+	model7 := CheckInRecord{7, "賴瑩一", "", pic1, "", "", "視覺設計", "視覺設計師", time.Time{}, time.Time{}}
 
 	// 產生實體打卡資料
 	for myTime := dateStart; myTime != dateEnd.AddDate(0, 0, 1); myTime = myTime.AddDate(0, 0, 1) {
@@ -266,7 +268,7 @@ func imoprtFackDatas() {
 		procesSickAbsence(&instance6)
 		procesSickAbsence(&instance7)
 
-		// 改打卡日:年月日
+		// 設定當筆資料 年月日(string)
 		instance1.Date = myTime.Format("2006-01-02")
 		instance2.Date = myTime.Format("2006-01-02")
 		instance3.Date = myTime.Format("2006-01-02")
@@ -275,93 +277,344 @@ func imoprtFackDatas() {
 		instance6.Date = myTime.Format("2006-01-02")
 		instance7.Date = myTime.Format("2006-01-02")
 
-		// 插入上班打卡時間:時分秒（隨機）避開病假事假
+		// 設定當筆資料 年月日(time.Time)
+		instance1.DateTimeToday = myTime
+		instance2.DateTimeToday = myTime
+		instance3.DateTimeToday = myTime
+		instance4.DateTimeToday = myTime
+		instance5.DateTimeToday = myTime
+		instance6.DateTimeToday = myTime
+		instance7.DateTimeToday = myTime
+
+		// 插入打卡資料(上班)，避開病、事假
 		if instance1.LeaveType != "病" && instance1.LeaveType != "事" {
-			instance1.CheckInTime = "08:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
-			record1 = append(record1, instance1) // 插入上班假資料
+
+			// 隨機時間(上班卡)
+			exampleTime :=
+				time.Date(
+					dateStart.Year(),
+					dateStart.Month(),
+					dateStart.Day(),
+					0, //+8時區 早上8點
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					0,
+					time.UTC,
+				)
+
+			fmt.Printf(`子午標準時間 %v 本地時間 %v `, exampleTime, exampleTime.Local())
+
+			// 設定上班打卡時間 (time.Time)
+			instance1.DateTimeCheckIn = exampleTime
+
+			// 設定上班打卡時間 (string)
+			instance1.CheckInTime = strconv.Itoa(exampleTime.Hour()) + ":" + strconv.Itoa(exampleTime.Minute()) + ":" + strconv.Itoa(exampleTime.Second())
+			// instance1.CheckInTime = "08:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
+
+			record1 = append(record1, instance1) // 插入資料
 		}
 		if instance2.LeaveType != "病" && instance2.LeaveType != "事" {
-			instance2.CheckInTime = "08:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
+
+			exampleTime :=
+				time.Date(
+					dateStart.Year(),
+					dateStart.Month(),
+					dateStart.Day(),
+					0, //+8時區 早上8點
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					0,
+					time.UTC,
+				)
+
+			fmt.Printf(`子午標準時間 %v 本地時間 %v `, exampleTime, exampleTime.Local())
+
+			instance2.DateTimeCheckIn = exampleTime
+			instance2.CheckInTime = strconv.Itoa(exampleTime.Hour()) + ":" + strconv.Itoa(exampleTime.Minute()) + ":" + strconv.Itoa(exampleTime.Second())
+			// instance2.CheckInTime = "08:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
+
 			record2 = append(record2, instance2)
 		}
 		if instance3.LeaveType != "病" && instance3.LeaveType != "事" {
-			instance3.CheckInTime = "08:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
+
+			exampleTime :=
+				time.Date(
+					dateStart.Year(),
+					dateStart.Month(),
+					dateStart.Day(),
+					0, //+8時區 早上8點
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					0,
+					time.UTC,
+				)
+
+			fmt.Printf(`子午標準時間 %v 本地時間 %v `, exampleTime, exampleTime.Local())
+
+			instance3.DateTimeCheckIn = exampleTime
+			instance3.CheckInTime = strconv.Itoa(exampleTime.Hour()) + ":" + strconv.Itoa(exampleTime.Minute()) + ":" + strconv.Itoa(exampleTime.Second())
+			// instance3.CheckInTime = "08:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
+
 			record3 = append(record3, instance3)
 		}
 		if instance4.LeaveType != "病" && instance4.LeaveType != "事" {
-			instance4.CheckInTime = "08:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
+
+			exampleTime :=
+				time.Date(
+					dateStart.Year(),
+					dateStart.Month(),
+					dateStart.Day(),
+					0, //+8時區 早上8點
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					0,
+					time.UTC,
+				)
+
+			fmt.Printf(`子午標準時間 %v 本地時間 %v `, exampleTime, exampleTime.Local())
+
+			instance4.DateTimeCheckIn = exampleTime
+			instance4.CheckInTime = strconv.Itoa(exampleTime.Hour()) + ":" + strconv.Itoa(exampleTime.Minute()) + ":" + strconv.Itoa(exampleTime.Second())
+			// instance4.CheckInTime = "08:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
+
 			record4 = append(record4, instance4)
 		}
 		if instance5.LeaveType != "病" && instance5.LeaveType != "事" {
-			instance5.CheckInTime = "08:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
+			exampleTime :=
+				time.Date(
+					dateStart.Year(),
+					dateStart.Month(),
+					dateStart.Day(),
+					0, //+8時區 早上8點
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					0,
+					time.UTC,
+				)
+			fmt.Printf(`子午標準時間 %v 本地時間 %v `, exampleTime, exampleTime.Local())
+			instance5.DateTimeCheckIn = exampleTime
+			instance5.CheckInTime = strconv.Itoa(exampleTime.Hour()) + ":" + strconv.Itoa(exampleTime.Minute()) + ":" + strconv.Itoa(exampleTime.Second())
+			// instance5.CheckInTime = "08:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
+
 			record5 = append(record5, instance5)
 		}
 		if instance6.LeaveType != "病" && instance6.LeaveType != "事" {
-			instance6.CheckInTime = "08:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
+			exampleTime :=
+				time.Date(
+					dateStart.Year(),
+					dateStart.Month(),
+					dateStart.Day(),
+					0, //+8時區 早上8點
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					0,
+					time.UTC,
+				)
+
+			fmt.Printf(`子午標準時間 %v 本地時間 %v `, exampleTime, exampleTime.Local())
+			instance6.DateTimeCheckIn = exampleTime
+			instance6.CheckInTime = strconv.Itoa(exampleTime.Hour()) + ":" + strconv.Itoa(exampleTime.Minute()) + ":" + strconv.Itoa(exampleTime.Second())
+			// instance6.CheckInTime = "08:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
+
 			record6 = append(record6, instance6)
 		}
 		if instance7.LeaveType != "病" && instance7.LeaveType != "事" {
-			instance7.CheckInTime = "08:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
+			exampleTime :=
+				time.Date(
+					dateStart.Year(),
+					dateStart.Month(),
+					dateStart.Day(),
+					0, //+8時區 早上8點
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					0,
+					time.UTC,
+				)
+			fmt.Printf(`子午標準時間 %v 本地時間 %v `, exampleTime, exampleTime.Local())
+			instance7.DateTimeCheckIn = exampleTime
+			instance7.CheckInTime = strconv.Itoa(exampleTime.Hour()) + ":" + strconv.Itoa(exampleTime.Minute()) + ":" + strconv.Itoa(exampleTime.Second())
+			// instance7.CheckInTime = "08:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
+
 			record7 = append(record7, instance7)
 		}
 
 		// 插入下班打卡時間:時分秒（隨機）
 		if instance1.LeaveType != "病" && instance1.LeaveType != "事" {
-			instance1.CheckInTime = "18:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
+			exampleTime :=
+				time.Date(
+					dateStart.Year(),
+					dateStart.Month(),
+					dateStart.Day(),
+					10, //+8時區 18點
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					0,
+					time.UTC,
+				)
+
+			fmt.Printf(`子午標準時間 %v 本地時間 %v `, exampleTime, exampleTime.Local())
+			instance1.DateTimeCheckIn = exampleTime
+			instance1.CheckInTime = strconv.Itoa(exampleTime.Hour()) + ":" + strconv.Itoa(exampleTime.Minute()) + ":" + strconv.Itoa(exampleTime.Second())
+			// instance1.CheckInTime = "18:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
+
 			record1 = append(record1, instance1) // 插入下班假資料
 		}
 		if instance2.LeaveType != "病" && instance2.LeaveType != "事" {
-			instance2.CheckInTime = "18:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
+			exampleTime :=
+				time.Date(
+					dateStart.Year(),
+					dateStart.Month(),
+					dateStart.Day(),
+					10, //+8時區 18點
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					0,
+					time.UTC,
+				)
+
+			fmt.Printf(`子午標準時間 %v 本地時間 %v `, exampleTime, exampleTime.Local())
+			instance2.DateTimeCheckIn = exampleTime
+			instance2.CheckInTime = strconv.Itoa(exampleTime.Hour()) + ":" + strconv.Itoa(exampleTime.Minute()) + ":" + strconv.Itoa(exampleTime.Second())
+			// instance2.CheckInTime = "18:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
+
 			record2 = append(record2, instance2)
 		}
 		if instance3.LeaveType != "病" && instance3.LeaveType != "事" {
-			instance3.CheckInTime = "18:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
+			exampleTime :=
+				time.Date(
+					dateStart.Year(),
+					dateStart.Month(),
+					dateStart.Day(),
+					10, //+8時區 18點
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					0,
+					time.UTC,
+				)
+
+			fmt.Printf(`子午標準時間 %v 本地時間 %v `, exampleTime, exampleTime.Local())
+			instance3.DateTimeCheckIn = exampleTime
+			instance3.CheckInTime = strconv.Itoa(exampleTime.Hour()) + ":" + strconv.Itoa(exampleTime.Minute()) + ":" + strconv.Itoa(exampleTime.Second())
+			// instance3.CheckInTime = "18:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
+
 			record3 = append(record3, instance3)
 		}
 		if instance4.LeaveType != "病" && instance4.LeaveType != "事" {
-			instance4.CheckInTime = "18:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
+			exampleTime :=
+				time.Date(
+					dateStart.Year(),
+					dateStart.Month(),
+					dateStart.Day(),
+					10, //+8時區 18點
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					0,
+					time.UTC,
+				)
+
+			fmt.Printf(`子午標準時間 %v 本地時間 %v `, exampleTime, exampleTime.Local())
+			instance4.DateTimeCheckIn = exampleTime
+			instance4.CheckInTime = strconv.Itoa(exampleTime.Hour()) + ":" + strconv.Itoa(exampleTime.Minute()) + ":" + strconv.Itoa(exampleTime.Second())
+			// instance4.CheckInTime = "18:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
+
 			record4 = append(record4, instance4)
 		}
 		if instance5.LeaveType != "病" && instance5.LeaveType != "事" {
-			instance5.CheckInTime = "18:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
+			exampleTime :=
+				time.Date(
+					dateStart.Year(),
+					dateStart.Month(),
+					dateStart.Day(),
+					10, //+8時區 18點
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					0,
+					time.UTC,
+				)
+
+			fmt.Printf(`子午標準時間 %v 本地時間 %v `, exampleTime, exampleTime.Local())
+			instance5.DateTimeCheckIn = exampleTime
+			instance5.CheckInTime = strconv.Itoa(exampleTime.Hour()) + ":" + strconv.Itoa(exampleTime.Minute()) + ":" + strconv.Itoa(exampleTime.Second())
+			// instance5.CheckInTime = "18:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
+
 			record5 = append(record5, instance5)
 		}
 		if instance6.LeaveType != "病" && instance6.LeaveType != "事" {
-			instance6.CheckInTime = "18:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
+			exampleTime :=
+				time.Date(
+					dateStart.Year(),
+					dateStart.Month(),
+					dateStart.Day(),
+					10, //+8時區 18點
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					0,
+					time.UTC,
+				)
+
+			fmt.Printf(`子午標準時間 %v 本地時間 %v `, exampleTime, exampleTime.Local())
+			instance6.DateTimeCheckIn = exampleTime
+			instance6.CheckInTime = strconv.Itoa(exampleTime.Hour()) + ":" + strconv.Itoa(exampleTime.Minute()) + ":" + strconv.Itoa(exampleTime.Second())
+			// instance6.CheckInTime = "18:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
+
 			record6 = append(record6, instance6)
 		}
 		if instance7.LeaveType != "病" && instance7.LeaveType != "事" {
-			instance7.CheckInTime = "18:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
+			exampleTime :=
+				time.Date(
+					dateStart.Year(),
+					dateStart.Month(),
+					dateStart.Day(),
+					10, //+8時區 18點
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					rand.New(rand.NewSource(time.Now().UnixNano())).Intn(60),
+					0,
+					time.UTC,
+				)
+
+			fmt.Printf(`子午標準時間 %v 本地時間 %v `, exampleTime, exampleTime.Local())
+			instance7.DateTimeCheckIn = exampleTime
+			instance7.CheckInTime = strconv.Itoa(exampleTime.Hour()) + ":" + strconv.Itoa(exampleTime.Minute()) + ":" + strconv.Itoa(exampleTime.Second())
+			// instance7.CheckInTime = "18:" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10)) + ":" + strconv.Itoa(rand.Intn(6)) + strconv.Itoa(rand.Intn(10))
+
 			record7 = append(record7, instance7)
 		}
 
 		//插入病假事假資料:
 		if instance1.LeaveType == "病" || instance1.LeaveType == "事" {
 			instance1.CheckInTime = ""
+			//instance1.DateTimeCheckIn.IsZero() //判斷時間為空的方法
+			instance1.DateTimeCheckIn = time.Time{}
 			record1 = append(record1, instance1) // 插入下班假資料
 		}
 		if instance2.LeaveType == "病" || instance2.LeaveType == "事" {
 			instance2.CheckInTime = ""
+			instance2.DateTimeCheckIn = time.Time{}
 			record2 = append(record2, instance2)
 		}
 		if instance3.LeaveType == "病" || instance3.LeaveType == "事" {
 			instance3.CheckInTime = ""
+			instance3.DateTimeCheckIn = time.Time{}
 			record3 = append(record3, instance3)
 		}
 		if instance4.LeaveType == "病" || instance4.LeaveType == "事" {
 			instance4.CheckInTime = ""
+			instance4.DateTimeCheckIn = time.Time{}
 			record4 = append(record4, instance4)
 		}
 		if instance5.LeaveType == "病" || instance5.LeaveType == "事" {
 			instance5.CheckInTime = ""
+			instance5.DateTimeCheckIn = time.Time{}
 			record5 = append(record5, instance5)
 		}
 		if instance6.LeaveType == "病" || instance6.LeaveType == "事" {
 			instance6.CheckInTime = ""
+			instance6.DateTimeCheckIn = time.Time{}
 			record6 = append(record6, instance6)
 		}
 		if instance7.LeaveType == "病" || instance7.LeaveType == "事" {
 			instance7.CheckInTime = ""
+			instance7.DateTimeCheckIn = time.Time{}
 			record7 = append(record7, instance7)
 		}
 
